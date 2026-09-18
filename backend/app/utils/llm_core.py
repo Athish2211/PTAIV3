@@ -14,10 +14,27 @@ import os
 import time
 from typing import List, Dict, Any, Optional, Tuple
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
-MODEL = "phi4-mini"
-# MODEL = "MedAIBase/MedGemma1.5:4b"
+def get_ollama_urls() -> List[str]:
+    candidates = []
+    env_url = os.environ.get("OLLAMA_BASE_URL", "").rstrip("/")
+    if env_url:
+        candidates.append(env_url)
+    candidates.extend([
+        "http://ollama:11434",
+        "http://host.docker.internal:11434",
+        "http://127.0.0.1:11434",
+        "http://localhost:11434"
+    ])
+    seen = set()
+    unique = []
+    for u in candidates:
+        if u and u not in seen:
+            seen.add(u)
+            unique.append(u)
+    return unique
+
+MODEL = os.environ.get("LLM_MODEL", "phi4-mini:latest")
+
 
 
 def find_ollama_binary() -> Optional[str]:
@@ -41,12 +58,15 @@ def find_ollama_binary() -> Optional[str]:
 
 
 def is_ollama_running(timeout: float = 1.0) -> bool:
-    """Check if the local Ollama server is responding."""
-    try:
-        res = requests.get(OLLAMA_TAGS_URL, timeout=timeout)
-        return res.status_code == 200
-    except Exception:
-        return False
+    """Check if any Ollama candidate endpoint is responding."""
+    for base_url in get_ollama_urls():
+        try:
+            res = requests.get(f"{base_url}/api/tags", timeout=timeout)
+            if res.status_code == 200:
+                return True
+        except Exception:
+            continue
+    return False
 
 
 def ensure_ollama_running(timeout: float = 5.0) -> Tuple[bool, str]:
@@ -95,7 +115,7 @@ def ensure_ollama_running(timeout: float = 5.0) -> Tuple[bool, str]:
 
 
 def query_llm(prompt: str, system: str = "", temperature: float = 0.3) -> str:
-    """Send a completion prompt to Ollama with error handling and automatic server start."""
+    """Send a completion prompt to Ollama with error handling and multi-endpoint fallback."""
     full_prompt = f"{system}\n\n{prompt}" if system else prompt
     payload = {
         "model": MODEL,
@@ -103,23 +123,28 @@ def query_llm(prompt: str, system: str = "", temperature: float = 0.3) -> str:
         "stream": False,
         "options": {"temperature": temperature},
     }
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=300)
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-    except requests.exceptions.ConnectionError:
-        # Attempt to auto-start Ollama if it was down, then retry once
-        started, _ = ensure_ollama_running(timeout=4.0)
-        if started:
+    last_err = None
+    for base_url in get_ollama_urls():
+        try:
+            response = requests.post(f"{base_url}/api/generate", json=payload, timeout=120)
+            response.raise_for_status()
+            return response.json().get("response", "").strip()
+        except Exception as e:
+            last_err = e
+            continue
+
+    # Attempt to auto-start Ollama if local and retry
+    started, _ = ensure_ollama_running(timeout=4.0)
+    if started:
+        for base_url in get_ollama_urls():
             try:
-                response = requests.post(OLLAMA_URL, json=payload, timeout=300)
+                response = requests.post(f"{base_url}/api/generate", json=payload, timeout=120)
                 response.raise_for_status()
                 return response.json().get("response", "").strip()
             except Exception:
                 pass
-        return "ERROR_OLLAMA_DOWN"
-    except Exception as e:
-        return f"ERROR: {str(e)}"
+    return "ERROR_OLLAMA_DOWN"
+
 
 
 def query_chat_llm(

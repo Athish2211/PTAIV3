@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { queryOllamaGenerate } from '@/lib/ollama'
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434'
 const PRIMARY_MODEL = 'phi4-mini:latest'
 const FALLBACK_MODEL = 'medgemma:latest'
 
@@ -60,39 +60,26 @@ Evaluate if there is any drug-allergy conflict or cross-reactivity. Return JSON.
 
     let resultJson: any = null
 
-    // Try primary model (phi4-mini)
+    // Try primary model (phi4-mini), then fallback model (medgemma)
     for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
-      try {
-        const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model,
-            prompt: userPrompt,
-            system: systemPrompt,
-            stream: false,
-            format: 'json',
-            options: {
-              temperature: 0.1,
-            },
-          }),
-        })
+      const { response: slmText, success } = await queryOllamaGenerate({
+        model,
+        prompt: userPrompt,
+        system: systemPrompt,
+        format: 'json',
+        temperature: 0.1,
+        timeoutMs: 60000,
+      })
 
-        if (ollamaRes.ok) {
-          const data = await ollamaRes.json()
-          if (data.response) {
-            try {
-              resultJson = JSON.parse(data.response)
-              if (typeof resultJson.hasConflict === 'boolean') {
-                break
-              }
-            } catch (pErr) {
-              console.warn('Failed to parse Ollama JSON response:', data.response)
-            }
+      if (success && slmText) {
+        try {
+          resultJson = JSON.parse(slmText)
+          if (typeof resultJson.hasConflict === 'boolean') {
+            break
           }
+        } catch (pErr) {
+          console.warn('Failed to parse Ollama JSON response:', slmText)
         }
-      } catch (callErr) {
-        console.warn(`Ollama call failed for ${model}:`, callErr)
       }
     }
 

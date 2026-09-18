@@ -132,6 +132,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NEXT_PUBLIC_APP_NAME=PTAI v3
+      - OLLAMA_BASE_URL=http://ollama:11434
     volumes:
       - ./frontend:/app
       - /app/node_modules

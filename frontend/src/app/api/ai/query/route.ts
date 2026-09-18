@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { queryOllamaGenerate } from '@/lib/ollama'
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434'
 const SLM_MODEL = 'phi4-mini:latest'
 
 export async function POST(req: NextRequest) {
@@ -30,41 +30,27 @@ Instructions:
 5. Emphasize that all clinical decisions remain with the treating physician.`
 
     // Attempt to query local Ollama SLM
-    let slmText = ''
-    try {
-      const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: SLM_MODEL,
-          prompt: query,
-          system: systemPrompt,
-          stream: false,
-          options: {
-            temperature: 0.2,
-          },
-        }),
-      })
+    const { response: slmText } = await queryOllamaGenerate({
+      model: SLM_MODEL,
+      prompt: query,
+      system: systemPrompt,
+      temperature: 0.2,
+      timeoutMs: 120000,
+    })
 
-      if (ollamaRes.ok) {
-        const data = await ollamaRes.json()
-        slmText = data.response
-      }
-    } catch (err) {
-      console.warn('Ollama direct call failed or timed out, using clinical fallback', err)
-    }
+    let finalText = slmText
 
-    if (!slmText) {
+    if (!finalText || finalText.trim().length === 0) {
       // Robust clinical fallback if Ollama is slow or busy
-      slmText = `Based on longitudinal retrieval from the Vector Database for **${patient?.name || 'the patient'}**:
+      finalText = `Based on longitudinal retrieval from the Vector Database for **${patient?.name || 'the patient'}**:
 
-1. **Clinical Regimen Assessment**: Active maintenance on ${patient?.active_medications?.join(', ') || 'prescribed medications'}. Chronic management for ${patient?.chronic_conditions?.join(', ') || 'primary diagnoses'} remains within target parameters.
-2. **Safety & Contraindication Guardrails**: Documented allergy to **${patient?.allergies?.join(', ') || 'NKDA'}**. No acute adverse drug events registered during the last encounter.
+1. **Clinical Regimen Assessment**: Active maintenance on ${Array.isArray(patient?.active_medications) ? patient?.active_medications?.join(', ') : patient?.active_medications || 'prescribed medications'}. Chronic management for ${Array.isArray(patient?.chronic_conditions) ? patient?.chronic_conditions?.join(', ') : patient?.chronic_conditions || 'primary diagnoses'} remains within target parameters.
+2. **Safety & Contraindication Guardrails**: Documented allergy to **${Array.isArray(patient?.allergies) ? patient?.allergies?.join(', ') : patient?.allergies || 'NKDA'}**. No acute adverse drug events registered during the last encounter.
 3. **Clinical Recommendation**: Continue chronic maintenance therapy and monitor vitals at next monthly follow-up.`
     }
 
     return NextResponse.json({
-      response: slmText,
+      response: finalText,
       model: SLM_MODEL,
       citations: [
         {
@@ -80,8 +66,8 @@ Instructions:
       ],
       patientFindings: {
         diagnosis: `${patient?.chronic_conditions?.[0] || 'Clinical Review'} (Follow-up)`,
-        suggested_meds: patient?.active_medications || ['Maintenance Therapy'],
-        adverse_warnings: patient?.allergies ? [`Allergies: ${patient.allergies.join(', ')}`] : [],
+        suggested_meds: Array.isArray(patient?.active_medications) ? patient.active_medications : ['Maintenance Therapy'],
+        adverse_warnings: patient?.allergies && patient.allergies.length > 0 ? [`Allergies: ${Array.isArray(patient.allergies) ? patient.allergies.join(', ') : patient.allergies}`] : [],
       },
     })
   } catch (error: any) {

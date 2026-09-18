@@ -169,7 +169,8 @@ export default function AnalyticsPipelinePage() {
       await fetchLlmInsights()
 
       // 2. Trigger backend heavy agent pipeline
-      const res = await fetch('http://localhost:8000/api/v1/analytics/v2-advanced', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const res = await fetch(`${apiUrl}/api/v1/analytics/v2-advanced`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patients, prescriptions })

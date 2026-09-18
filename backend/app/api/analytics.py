@@ -147,19 +147,44 @@ async def run_v2_advanced_agents(request: V2AdvancedRequest):
             'drug_name': 'medication'
         }
 
+        def serialize_agent_result(res: dict) -> dict:
+            if not isinstance(res, dict):
+                return {}
+            clean = {}
+            for k, v in res.items():
+                if k == "figures":
+                    clean_figs = []
+                    for fig in (v or []):
+                        if hasattr(fig, "to_dict"):
+                            clean_figs.append(fig.to_dict())
+                        elif isinstance(fig, (dict, list, str, int, float, bool)):
+                            clean_figs.append(fig)
+                        else:
+                            clean_figs.append(str(fig))
+                    clean[k] = clean_figs
+                elif hasattr(v, "to_dict"):
+                    clean[k] = v.to_dict()
+                elif isinstance(v, (dict, list, str, int, float, bool, type(None))):
+                    clean[k] = v
+                else:
+                    clean[k] = str(v)
+            return clean
+
         # Run Agents
-        risk_result = run_risk_agent_improved(df, col_map)
-        
-        # Prevent crash if anomaly agent needs specific columns
+        try:
+            risk_result = run_risk_agent_improved(df, col_map)
+        except Exception as e:
+            risk_result = {"status": "error", "error": str(e), "figures": [], "summary": f"Risk agent evaluation error: {str(e)}"}
+
         try:
             anomaly_result = run_anomaly_agent_improved(df, col_map)
         except Exception as e:
-            anomaly_result = {"status": "error", "error": str(e), "figures": []}
+            anomaly_result = {"status": "error", "error": str(e), "figures": [], "summary": f"Anomaly agent evaluation error: {str(e)}"}
 
         return {
             "status": "success",
-            "risk_agent": risk_result,
-            "anomaly_agent": anomaly_result
+            "risk_agent": serialize_agent_result(risk_result),
+            "anomaly_agent": serialize_agent_result(anomaly_result)
         }
 
     except Exception as e:

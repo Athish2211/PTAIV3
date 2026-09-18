@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { queryOllamaGenerate } from '@/lib/ollama'
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434'
 const PRIMARY_MODEL = 'phi4-mini:latest'
 
 export async function POST(req: NextRequest) {
@@ -103,34 +103,21 @@ You MUST respond ONLY with a JSON object matching this exact schema (no markdown
 
     let analyticsResult: any = null
 
-    try {
-      const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: PRIMARY_MODEL,
-          prompt: promptContext,
-          system: systemPrompt,
-          stream: false,
-          format: 'json',
-          options: {
-            temperature: 0.2,
-          },
-        }),
-      })
+    const { response: slmText } = await queryOllamaGenerate({
+      model: PRIMARY_MODEL,
+      prompt: promptContext,
+      system: systemPrompt,
+      format: 'json',
+      temperature: 0.2,
+      timeoutMs: 120000,
+    })
 
-      if (ollamaRes.ok) {
-        const data = await ollamaRes.json()
-        if (data.response) {
-          try {
-            analyticsResult = JSON.parse(data.response)
-          } catch (e) {
-            console.warn('Failed to parse analytics JSON from Ollama:', data.response)
-          }
-        }
+    if (slmText) {
+      try {
+        analyticsResult = JSON.parse(slmText)
+      } catch (e) {
+        console.warn('Failed to parse analytics JSON from Ollama:', slmText)
       }
-    } catch (err) {
-      console.warn('Ollama analytics call error:', err)
     }
 
     // Dynamic fallback if Ollama response needs supplementation
