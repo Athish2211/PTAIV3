@@ -7,8 +7,14 @@ from alembic import context
 
 from app.core.config import settings
 
+sync_url = settings.DATABASE_SYNC_URL
+if "localhost:5433" in sync_url and "postgres:5432" in settings.DATABASE_URL:
+    sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+elif not sync_url or "postgresql+asyncpg://" in sync_url:
+    sync_url = (settings.DATABASE_URL or sync_url).replace("postgresql+asyncpg://", "postgresql://")
+
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_SYNC_URL)
+config.set_main_option("sqlalchemy.url", sync_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -36,7 +42,7 @@ def run_migrations_online() -> None:
     connectable = context.config.attributes.get("connection", None)
     if connectable is None:
         from sqlalchemy import create_engine
-        connectable = create_engine(settings.DATABASE_SYNC_URL, poolclass=pool.NullPool)
+        connectable = create_engine(sync_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

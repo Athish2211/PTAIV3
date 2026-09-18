@@ -70,20 +70,21 @@ services:
     environment:
       - APP_ENV=development
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-ptai_user}:${POSTGRES_PASSWORD:-ptai_secret}@postgres:5432/${POSTGRES_DB:-ptai_db}
+      - DATABASE_SYNC_URL=postgresql://${POSTGRES_USER:-ptai_user}:${POSTGRES_PASSWORD:-ptai_secret}@postgres:5432/${POSTGRES_DB:-ptai_db}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-ptai_redis_secret}@redis:6379/0
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production-jwt-secret}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change-me-in-production-refresh-secret}
       - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production-session-secret}
       - MFA_ENCRYPTION_KEY=${MFA_ENCRYPTION_KEY:-change-me-in-production-mfa-key}
       - OLLAMA_BASE_URL=http://ollama:11434
-      - LLM_MODEL=${LLM_MODEL:-llama3.2:3b}
-      - FAST_MODEL=${FAST_MODEL:-llama3.2:3b}
-      - QUALITY_MODEL=${QUALITY_MODEL:-llama3.2:3b}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-nomic-embed-text}
-      - VECTOR_DIMENSION=${VECTOR_DIMENSION:-768}
-      - MAX_UPLOAD_MB=${MAX_UPLOAD_MB:-50}
-      - MAX_DATASET_MB=${MAX_DATASET_MB:-100}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      - LLM_MODEL=phi4-mini:latest
+      - FAST_MODEL=phi4-mini:latest
+      - QUALITY_MODEL=phi4-mini:latest
+      - EMBEDDING_MODEL=nomic-embed-text
+      - VECTOR_DIMENSION=768
+      - MAX_UPLOAD_MB=50
+      - MAX_DATASET_MB=100
+      - CORS_ORIGINS=http://localhost:3000
       - UPLOAD_DIR=/app/uploads
     volumes:
       - ./backend:/app
@@ -108,10 +109,11 @@ services:
     environment:
       - APP_ENV=development
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-ptai_user}:${POSTGRES_PASSWORD:-ptai_secret}@postgres:5432/${POSTGRES_DB:-ptai_db}
+      - DATABASE_SYNC_URL=postgresql://${POSTGRES_USER:-ptai_user}:${POSTGRES_PASSWORD:-ptai_secret}@postgres:5432/${POSTGRES_DB:-ptai_db}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-ptai_redis_secret}@redis:6379/0
       - OLLAMA_BASE_URL=http://ollama:11434
-      - LLM_MODEL=${LLM_MODEL:-llama3.2:3b}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-nomic-embed-text}
+      - LLM_MODEL=phi4-mini:latest
+      - EMBEDDING_MODEL=nomic-embed-text
       - UPLOAD_DIR=/app/uploads
     volumes:
       - ./backend:/app
