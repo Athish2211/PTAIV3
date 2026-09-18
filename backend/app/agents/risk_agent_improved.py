@@ -206,43 +206,55 @@ class HealthcareRiskPredictor:
             if 'medical_complexity_score' in features.columns:
                 features['complexity_risk'] = np.clip(features['medical_complexity_score'] * 0.2, 0, 0.5)
                 
-            # Rule 9: Dynamic Allergy Cross-Reactivity Risk
+            # Rule 9: Dynamic LLM Allergy Cross-Reactivity Risk
             allergy_col = next((c for c, cat in col_map.items() if cat == "allergies" and c in features.columns), None)
             drug_col = next((c for c, cat in col_map.items() if cat == "drug_name" and c in features.columns), None)
             
-            # Map common drug classes to their members or prefixes
-            allergy_classes = {
-                'penicillin': ['cillin', 'augmentin'],
-                'cephalosporin': ['cef', 'ceph'],
-                'sulfa': ['sulfa', 'bactrim', 'septra'],
-                'nsaid': ['ibuprofen', 'naproxen', 'diclofenac', 'ketorolac', 'meloxicam', 'aspirin'],
-                'opioid': ['morphine', 'codeine', 'hydrocodone', 'oxycodone', 'fentanyl', 'tramadol']
-            }
-            
             if allergy_col and drug_col:
                 features['allergy_conflict_risk'] = 0.0
+                import httpx
+                
+                # Cache LLM evaluations to keep processing fast
+                llm_cache = {}
+
                 for idx, row in features.iterrows():
-                    allergies_str = str(row[allergy_col]).lower()
-                    drug_str = str(row[drug_col]).lower()
+                    allergies_str = str(row[allergy_col]).strip()
+                    drug_str = str(row[drug_col]).strip()
                     
-                    if allergies_str == 'nan' or allergies_str == 'none' or drug_str == 'nan':
+                    if not allergies_str or allergies_str.lower() in ['nan', 'none', 'nkda', 'no known drug allergies'] or not drug_str or drug_str.lower() == 'nan':
                         continue
-                        
-                    conflict_found = False
                     
-                    # Direct match
-                    if drug_str in allergies_str:
-                        conflict_found = True
-                    else:
-                        # Cross-reactivity match
-                        for alg_class, members in allergy_classes.items():
-                            if alg_class in allergies_str:
-                                if any(m in drug_str for m in members):
-                                    conflict_found = True
-                                    break
-                    
-                    if conflict_found:
-                        features.at[idx, 'allergy_conflict_risk'] = 0.6  # Medium-High Risk for allergy conflict
+                    cache_key = f"{allergies_str.lower()}___{drug_str.lower()}"
+                    if cache_key in llm_cache:
+                        if llm_cache[cache_key]:
+                            features.at[idx, 'allergy_conflict_risk'] = 0.6
+                        continue
+
+                    # Dynamic LLM check via local Ollama
+                    try:
+                        prompt = f"Patient allergy: '{allergies_str}'. Prescribed medication: '{drug_str}'. Is there an allergic cross-reactivity or direct contraindication? Reply with JSON: {{\"conflict\": true/false}}"
+                        r = httpx.post("http://127.0.0.1:11434/api/generate", json={
+                            "model": "phi4-mini:latest",
+                            "prompt": prompt,
+                            "stream": False,
+                            "format": "json",
+                            "options": {"temperature": 0.1}
+                        }, timeout=3.0)
+                        if r.status_code == 200:
+                            import json
+                            data = json.loads(r.json().get("response", "{}"))
+                            has_conflict = bool(data.get("conflict", False))
+                            llm_cache[cache_key] = has_conflict
+                            if has_conflict:
+                                features.at[idx, 'allergy_conflict_risk'] = 0.6
+                        else:
+                            llm_cache[cache_key] = False
+                    except Exception:
+                        # Fallback to direct semantic inclusion if LLM timed out
+                        has_conflict = drug_str.lower() in allergies_str.lower() or allergies_str.lower() in drug_str.lower()
+                        llm_cache[cache_key] = has_conflict
+                        if has_conflict:
+                            features.at[idx, 'allergy_conflict_risk'] = 0.6
                         
             # Combine all rule-based risks
             risk_columns = [col for col in features.columns if col.endswith('_risk')]

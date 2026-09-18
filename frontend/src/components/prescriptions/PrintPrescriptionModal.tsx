@@ -46,7 +46,7 @@ export default function PrintPrescriptionModal({
   items,
   doctorName = 'Dr. Dinesh Kumar, MD',
   doctorLicense = '#MED-IN-984210',
-  clinicName = 'Medical Health & Research Hospital',
+  clinicName = 'Clinical Prescription Order',
   date,
 }: PrintPrescriptionProps) {
   const printRef = useRef<HTMLDivElement>(null)
@@ -234,15 +234,12 @@ export default function PrintPrescriptionModal({
                 </h1>
               </div>
               <p className="text-xs text-slate-600 font-semibold mt-1">
-                Advanced AI-Assisted Clinical Care & Precision Medicine
-              </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                402 Medical Center Boulevard, Suite 800 · Tel: +1 (800) 555-PTAI · info@ptai-health.org
+                Official Electronic Prescription & Medication Order
               </p>
             </div>
             <div className="text-right">
               <div className="text-sm font-black text-slate-950">{doctorName}</div>
-              <div className="text-xs text-slate-700 font-medium">Internal Medicine & Clinical AI</div>
+              <div className="text-xs text-slate-700 font-medium">Internal Medicine & Clinical Care</div>
               <div className="text-[11px] text-slate-500 font-mono mt-0.5">Lic: {doctorLicense}</div>
             </div>
           </div>

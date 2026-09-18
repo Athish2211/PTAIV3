@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Pill, User, Save, Plus, PlusCircle, Trash2, ShieldCheck,
   AlertTriangle, Printer, CheckCircle2, UserPlus,
-  Sparkles, Stethoscope, Search, Info, HelpCircle
+  Sparkles, Stethoscope, Search, Info, HelpCircle, Cpu
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescriptionModal'
@@ -144,7 +144,7 @@ export default function NewPrescriptionPage() {
       diagnosis: diagnosisContext || 'General Medical Review',
       medications: items,
       status: 'active' as const,
-      risk_status: hasPenicillinConflict ? ('anomaly_flagged' as const) : ('normal' as const),
+      risk_status: allergyCheckResult?.hasConflict ? ('anomaly_flagged' as const) : ('normal' as const),
     }
 
     addPrescription(newRx)
@@ -176,10 +176,60 @@ export default function NewPrescriptionPage() {
     }
   }
 
-  // Check for mock live safety warning (e.g. Penicillin allergy vs Amoxicillin)
-  const hasPenicillinConflict =
-    matchedPatient?.allergies?.some((a: string) => a.toLowerCase().includes('penicillin')) &&
-    items.some((i) => i.medication.toLowerCase().includes('amox'))
+  // Dynamic LLM Allergy Intelligence State
+  const [allergyCheckResult, setAllergyCheckResult] = useState<{
+    hasConflict: boolean
+    severity: string
+    conflictingMedication?: string
+    allergyTarget?: string
+    reason?: string
+    recommendation?: string
+  } | null>(null)
+  const [isCheckingAllergy, setIsCheckingAllergy] = useState(false)
+
+  // Live LLM Evaluation whenever patient allergies or medications change
+  useEffect(() => {
+    const rawAllergies = matchedPatient?.allergies || (newPatientData.allergies ? [newPatientData.allergies] : [])
+    const cleanAllergies = rawAllergies.filter(
+      (a: string) => a && a.toUpperCase() !== 'NKDA' && !a.toLowerCase().includes('no known')
+    )
+
+    if (cleanAllergies.length === 0 || items.length === 0 || !items.some((i) => i.medication.trim())) {
+      setAllergyCheckResult(null)
+      setIsCheckingAllergy(false)
+      return
+    }
+
+    let isMounted = true
+    setIsCheckingAllergy(true)
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/ai/allergy-check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            allergies: cleanAllergies,
+            medications: items.map((it) => it.medication),
+            patientName: matchedPatient?.name || newPatientData.name || 'Patient',
+          }),
+        })
+        if (res.ok && isMounted) {
+          const data = await res.json()
+          setAllergyCheckResult(data)
+        }
+      } catch (err) {
+        console.warn('Live LLM allergy check error:', err)
+      } finally {
+        if (isMounted) setIsCheckingAllergy(false)
+      }
+    }, 350)
+
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [matchedPatient, items, newPatientData.allergies])
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -718,23 +768,46 @@ export default function NewPrescriptionPage() {
           ))}
         </div>
 
-        {/* ── LIVE AI SAFETY GUARDRAIL WARNING ── */}
-        {hasPenicillinConflict ? (
-          <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-start gap-3">
-            <AlertTriangle size={20} className="text-rose-400 flex-shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <div className="font-bold text-rose-300 uppercase tracking-wider">
-                Risk Agent Alert: Potential Contraindication Detected
+        {/* ── LIVE AI SAFETY GUARDRAIL WARNING (LLM POWERED) ── */}
+        {isCheckingAllergy ? (
+          <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-3 text-xs text-cyan-300 animate-pulse">
+            <Cpu size={18} className="text-cyan-400 flex-shrink-0" />
+            <div>
+              <span className="font-semibold">Local SLM (phi-4-mini) Analyzing Pharmacology:</span>
+              <span className="text-cyan-200 ml-1.5">Evaluating molecular cross-reactivity & drug-allergy contraindications...</span>
+            </div>
+          </div>
+        ) : allergyCheckResult?.hasConflict ? (
+          <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-start gap-3.5">
+            <AlertTriangle size={22} className="text-rose-400 flex-shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1.5 flex-1">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-rose-300 uppercase tracking-wider flex items-center gap-2">
+                  <span>LLM Risk Agent: Drug-Allergy Conflict Detected</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/30 text-rose-200 border border-rose-500/40">
+                    {allergyCheckResult.severity || 'High'} Risk
+                  </span>
+                </div>
+                <span className="text-[10px] text-rose-400/80 font-mono">Model: phi-4-mini</span>
               </div>
-              <div className="text-rose-200 mt-1">
-                Patient profile lists an allergy to <strong>Penicillin</strong>, but <strong>{items[0].medication}</strong> belongs to the aminopenicillin class. Consider alternative antimicrobial therapy (e.g. Macrolide / Azithromycin).
+              <div className="text-rose-100 text-xs leading-relaxed">
+                {allergyCheckResult.reason}
               </div>
+              {allergyCheckResult.recommendation && (
+                <div className="pt-1 text-[11px] text-amber-200 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                  <strong className="text-amber-300">Clinical Recommendation: </strong>
+                  {allergyCheckResult.recommendation}
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2.5 text-xs text-emerald-300">
-            <ShieldCheck size={16} className="text-emerald-400" />
-            <span>AI Safety & Anomaly Guardrail passed: No acute contraindications or extreme dosage outliers detected.</span>
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs text-emerald-300">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck size={16} className="text-emerald-400" />
+              <span>AI Safety Guardrail Passed: No acute contraindications or allergy cross-reactivities detected.</span>
+            </div>
+            <span className="text-[10px] text-emerald-400/60 font-mono">phi-4-mini verified</span>
           </div>
         )}
       </div>

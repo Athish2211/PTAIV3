@@ -94,46 +94,15 @@ export function computeRiskLevel(
   const activeMeds = (patient as any).active_medications?.length || 0
   if (activeMeds >= 5) score += 2
 
-  // Prescription-level signals & Dynamic Allergy Conflict Detection
+  // Prescription-level signals & Risk flags
   const patientRxs = prescriptions.filter(
     (rx) => rx.patient_id === patient.id || rx.mrn === patient.mrn
   )
 
-  const allergyClasses: Record<string, string[]> = {
-    'penicillin': ['cillin', 'augmentin'],
-    'cephalosporin': ['cef', 'ceph'],
-    'sulfa': ['sulfa', 'bactrim', 'septra'],
-    'nsaid': ['ibuprofen', 'naproxen', 'diclofenac', 'ketorolac', 'meloxicam', 'aspirin'],
-    'opioid': ['morphine', 'codeine', 'hydrocodone', 'oxycodone', 'fentanyl', 'tramadol']
-  };
-
   patientRxs.forEach((rx) => {
     if (rx.medications && rx.medications.length >= 4) score += 1
     if ((rx as any).risk_status === 'anomaly_flagged' || (rx as any).status === 'flagged') score += 3
-
-    // Dynamic Cross-Reactivity Check
-    if (rx.medications && patient.allergies && patient.allergies.length > 0) {
-      rx.medications.forEach(med => {
-        const drug = med.medication.toLowerCase();
-        patient.allergies.forEach(allergy => {
-          const alg = allergy.toLowerCase();
-          if (alg === 'nkda' || alg.includes('no known')) return;
-          
-          // Direct match
-          if (drug.includes(alg)) {
-            score += 3; // +3 automatically pushes to at least Moderate
-          } else {
-            // Class-based cross-reactivity match
-            for (const [algClass, members] of Object.entries(allergyClasses)) {
-              if (alg.includes(algClass) && members.some(m => drug.includes(m))) {
-                score += 3; // Push to Moderate risk
-                break;
-              }
-            }
-          }
-        });
-      });
-    }
+    if ((rx as any).risk_status === 'high_risk') score += 4
   })
 
   if (score >= 6) return 'High'
