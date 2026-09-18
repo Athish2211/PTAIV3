@@ -38,4 +38,4 @@ class OrganizationMember(TimeStampedModel):
 
     # Relationships
     organization: Mapped["Organization"] = relationship(back_populates="members")
-    user: Mapped["User"] = relationship(back_populates="org_memberships")  # type: ignore
+    user: Mapped["User"] = relationship()

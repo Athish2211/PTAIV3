@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { SEED_PATIENTS_100, SEED_PRESCRIPTIONS_100 } from '@/data/seedData'
 
 export type UserRole = 'doctor' | 'admin'
 
@@ -145,49 +146,71 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       setRoleState(savedRole)
     }
 
-    // Clean slate migration: automatically wipe out stale mock data from previous sessions
-    const hasCleared = localStorage.getItem(CLEAN_SLATE_KEY)
-    if (!hasCleared) {
-      localStorage.removeItem('ptai_patients')
-      localStorage.removeItem('ptai_prescriptions')
-      localStorage.setItem(CLEAN_SLATE_KEY, 'true')
-      setPatients([])
-      setPrescriptions([])
-      return
-    }
+    // Format 100 seed patients
+    const formattedSeedPatients: PatientRecord[] = SEED_PATIENTS_100.map((p) => ({
+      id: p.id,
+      name: p.name,
+      deidentified_id: p.deidentified_id,
+      mrn: p.mrn,
+      age: p.age,
+      age_bracket: p.age < 30 ? '18-29' : p.age < 50 ? '30-49' : p.age < 70 ? '50-69' : '70+',
+      gender: p.gender,
+      phone: p.phone,
+      blood_group: p.blood_group,
+      allergies: p.allergies,
+      chronic_conditions: p.chronic_conditions,
+      active_medications: p.active_medications,
+      last_visit: '2026-09-15',
+      risk_level: p.risk_level,
+      notes: p.notes,
+    }))
 
+    const formattedSeedPrescriptions: PrescriptionRecord[] = SEED_PRESCRIPTIONS_100.map((rx) => ({
+      id: rx.id,
+      patient_id: rx.patient_id,
+      patient_name: rx.patient_name,
+      mrn: rx.mrn,
+      age: rx.age,
+      gender: rx.gender,
+      date: rx.date,
+      diagnosis: rx.diagnosis,
+      medications: rx.medications,
+      status: (rx.status === 'flagged' ? 'flagged' : rx.status === 'completed' ? 'dispensed' : 'active') as 'active' | 'dispensed' | 'flagged',
+      risk_status: (rx.risk_status === 'anomaly_flagged' ? 'anomaly_flagged' : 'normal') as 'normal' | 'anomaly_flagged',
+    }))
 
     const savedPrescriptions = localStorage.getItem('ptai_prescriptions')
-    let loadedRxs: PrescriptionRecord[] = []
+    let loadedRxs: PrescriptionRecord[] = formattedSeedPrescriptions
     if (savedPrescriptions) {
       try {
         const parsed = JSON.parse(savedPrescriptions)
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           loadedRxs = parsed
-          setPrescriptions(parsed)
         }
       } catch (e) {
         console.error('Failed to parse cached prescriptions', e)
       }
     }
+    setPrescriptions(loadedRxs)
+    localStorage.setItem('ptai_prescriptions', JSON.stringify(loadedRxs))
 
     const savedPatients = localStorage.getItem('ptai_patients')
+    let loadedPatients: PatientRecord[] = formattedSeedPatients
     if (savedPatients) {
       try {
         const parsed = JSON.parse(savedPatients)
-        if (Array.isArray(parsed)) {
-          // Recompute risk for every loaded patient using their prescriptions
-          const reScored = parsed.map((p: PatientRecord) => ({
+        if (Array.isArray(parsed) && parsed.length >= 10) {
+          loadedPatients = parsed.map((p: PatientRecord) => ({
             ...p,
-            risk_level: computeRiskLevel(p, loadedRxs),
+            risk_level: p.risk_level || computeRiskLevel(p, loadedRxs),
           }))
-          setPatients(reScored)
-          localStorage.setItem('ptai_patients', JSON.stringify(reScored))
         }
       } catch (e) {
         console.error('Failed to parse cached patients', e)
       }
     }
+    setPatients(loadedPatients)
+    localStorage.setItem('ptai_patients', JSON.stringify(loadedPatients))
   }, [])
 
   const setRole = (newRole: UserRole) => {

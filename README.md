@@ -62,3 +62,13 @@ ollama pull llama3.2:3b
 ## 🌐 Access
 - **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
 - **Backend API Docs**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
+
+
+# Start all containers in the background
+docker-compose up -d
+
+# Stop all containers
+docker-compose down
+
+# View real-time logs
+docker-compose logs -f

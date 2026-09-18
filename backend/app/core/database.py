@@ -33,7 +33,11 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db():
-    """Initialize database extensions."""
+    """Initialize database extensions and all schema tables."""
+    import app.models  # noqa
+    from app.models.base import Base as ModelBase
+
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+        await conn.run_sync(ModelBase.metadata.create_all)

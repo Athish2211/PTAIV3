@@ -51,10 +51,7 @@ async def seed_organization_and_admin(db: AsyncSession) -> tuple[Organization, U
         slug="apollo-demo",
         email="admin@apollo-demo.ptai.dev",
         phone="+91-9999999999",
-        city="Hyderabad",
-        state="Telangana",
-        country="India",
-        plan_tier="enterprise",
+        address="Hyderabad, Telangana, India",
     )
     db.add(org)
     await db.flush()
@@ -90,13 +87,27 @@ async def seed_organization_and_admin(db: AsyncSession) -> tuple[Organization, U
     return org, doctor
 
 
-async def seed_patients(db: AsyncSession, org: Organization, count: int = 50) -> list[Patient]:
+async def seed_patients(db: AsyncSession, org: Organization, count: int = 100) -> list[Patient]:
     patients = []
-    for i in range(count):
-        dob = date(1960 + random.randint(0, 55), random.randint(1, 12), random.randint(1, 28))
+    
+    allergy_pool_low = ['["NKDA"]']
+    allergy_pool_mod = ['["Pollen"]', '["Dust mites"]', '["Sulfa drugs"]', '["Ibuprofen"]']
+    allergy_pool_high = ['["Penicillin"]', '["Amoxicillin"]', '["Cephalosporins"]', '["Aspirin"]', '["Morphine"]']
+
+    for i in range(1, count + 1):
+        if i <= 45:
+            dob = date(1980 + random.randint(0, 25), random.randint(1, 12), random.randint(1, 28))
+            algs = random.choice(allergy_pool_low)
+        elif i <= 80:
+            dob = date(1960 + random.randint(0, 22), random.randint(1, 12), random.randint(1, 28))
+            algs = random.choice(allergy_pool_mod)
+        else:
+            dob = date(1940 + random.randint(0, 25), random.randint(1, 12), random.randint(1, 28))
+            algs = random.choice(allergy_pool_high)
+
         patient = Patient(
             organization_id=org.id,
-            mrn=f"MRN-{1000 + i:04d}",
+            mrn=f"MRN-2026-{1000 + i:04d}",
             first_name=fake.first_name(),
             last_name=fake.last_name(),
             date_of_birth=dob,
@@ -107,20 +118,22 @@ async def seed_patients(db: AsyncSession, org: Organization, count: int = 50) ->
             state=fake.state(),
             country="India",
             blood_group=random.choice(BLOOD_GROUPS),
+            known_allergies=algs,
             is_active=True,
         )
         db.add(patient)
         patients.append(patient)
     await db.flush()
-    print(f"✓ Created {count} synthetic patients")
+    print(f"✓ Created {count} synthetic patients across Low, Moderate, and High risk profiles")
     return patients
 
 
-async def seed_prescriptions(db: AsyncSession, org: Organization, doctor: User, patients: list[Patient], count_per_patient: int = 6):
+async def seed_prescriptions(db: AsyncSession, org: Organization, doctor: User, patients: list[Patient], count_per_patient: int = 3):
     total = 0
-    for patient in patients:
-        for j in range(random.randint(2, count_per_patient)):
-            rx_date = date.today() - timedelta(days=random.randint(0, 365))
+    for idx, patient in enumerate(patients):
+        rx_count = 1 if idx < 45 else (2 if idx < 80 else 3)
+        for j in range(rx_count):
+            rx_date = date.today() - timedelta(days=random.randint(0, 60))
             diag_code, diag_name = random.choice(DIAGNOSES)
 
             prescription = Prescription(
@@ -137,9 +150,10 @@ async def seed_prescriptions(db: AsyncSession, org: Organization, doctor: User, 
             db.add(prescription)
             await db.flush()
 
-            # Add 1-3 medications
+            # Add medications according to risk profile
+            med_count = 1 if idx < 45 else (2 if idx < 80 else 4)
             for k, (med_name, generic, dosage, frequency, duration) in enumerate(
-                random.sample(MEDICATIONS, random.randint(1, 3))
+                random.sample(MEDICATIONS, med_count)
             ):
                 item = PrescriptionItem(
                     prescription_id=prescription.id,
@@ -149,7 +163,7 @@ async def seed_prescriptions(db: AsyncSession, org: Organization, doctor: User, 
                     frequency=frequency,
                     duration=duration,
                     route="oral",
-                    instructions="Take as directed.",
+                    instructions="Take as directed after food.",
                     sort_order=k,
                 )
                 db.add(item)
@@ -165,9 +179,12 @@ async def main():
     print("   (Using entirely synthetic data — NO real patient information)")
     print()
 
+    from app.core.database import init_db
+    await init_db()
+
     async with AsyncSessionLocal() as db:
         org, doctor = await seed_organization_and_admin(db)
-        patients = await seed_patients(db, org, count=50)
+        patients = await seed_patients(db, org, count=100)
         await seed_prescriptions(db, org, doctor, patients)
         await db.commit()
 
