@@ -3,10 +3,10 @@
 import React, { useState } from 'react'
 import {
   Lock, ShieldCheck, Database, Cpu, Eye, EyeOff,
-  FileText, CheckCircle2, AlertTriangle, Key, Server, RefreshCw
+  FileText, CheckCircle2, AlertTriangle, Key, Server, RefreshCw, UserCheck
 } from 'lucide-react'
 
-const HIPAA_AUDIT_LOGS = [
+const AUDIT_LOGS = [
   {
     id: 'log-1',
     timestamp: '2026-09-17 15:32:10',
@@ -63,14 +63,14 @@ export default function PrivacyAndEncryptionPage() {
             <span className="badge badge-cyan flex items-center gap-1">
               <ShieldCheck size={11} /> Data Administrator / CMO Security Console
             </span>
-            <span className="text-xs text-[var(--text-muted)] font-mono">HIPAA / GDPR Ready</span>
+            <span className="text-xs text-[var(--text-muted)] font-mono">Compliance Ready</span>
           </div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
             <Lock size={24} className="text-cyan-400" />
             <span>Privacy, Encryption & Audit Governance</span>
           </h1>
           <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Manage cryptographic field-level encryption, zero-data-retention local SLM policies, and HIPAA access audit trails.
+            Manage cryptographic field-level encryption, zero-data-retention local SLM policies, and secure access audit trails.
           </p>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function PrivacyAndEncryptionPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
             <div>
-              <div className="text-xs font-bold text-white">HIPAA Safe Harbor De-Identification Masking</div>
+              <div className="text-xs font-bold text-white">Secure De-Identification Masking</div>
               <div className="text-[11px] text-[var(--text-secondary)]">
                 Automatically masks patient names to `PT-ANON-XXXX` and dates of birth to 10-year age brackets in CMO/Admin views.
               </div>
@@ -178,19 +178,20 @@ export default function PrivacyAndEncryptionPage() {
         </div>
       </div>
 
-      {/* HIPAA Access Audit Trail */}
-      <div className="glass-panel p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Access Audit Trail */}
+      <div className="glass-panel p-6 border-indigo-500/20">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <UserCheck size={18} />
+          </div>
           <div>
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <FileText size={16} className="text-indigo-400" />
-              HIPAA Clinical Access Audit Trail
+            <h2 className="text-lg font-bold text-white">
+              Clinical Access Audit Trail
             </h2>
             <p className="text-xs text-[var(--text-secondary)] mt-0.5">
               Immutable ledger of all patient record accesses, prescription generation events, and export queries.
             </p>
           </div>
-          <span className="text-[11px] font-mono text-[var(--text-muted)]">Live Streaming</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -207,7 +208,7 @@ export default function PrivacyAndEncryptionPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
-              {HIPAA_AUDIT_LOGS.map((log) => (
+              {AUDIT_LOGS.map((log) => (
                 <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)]">{log.timestamp}</td>
                   <td className="py-3 px-4 font-bold text-white">{log.actor}</td>

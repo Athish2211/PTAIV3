@@ -9,19 +9,19 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { FileText, Pill, ArrowLeft, Loader2, Sparkles, Database } from 'lucide-react'
+import { Download, ExternalLink, Calendar, Search, Filter } from 'lucide-react'
 import Link from 'next/link'
-import PrescriptionUpload from '@/components/prescriptions/PrescriptionUpload'
 import { patientsApi, prescriptionUploadsApi } from '@/services/api'
 import { useRole } from '@/context/RoleContext'
 
-type Tab = 'documents' | 'prescription_uploads'
+type Tab = 'documents'
 
 export default function PatientDocumentsPage() {
   const params = useParams()
   const patientId = params.id as string
   const { getPatient } = useRole()
 
-  const [activeTab, setActiveTab] = useState<Tab>('prescription_uploads')
+  const [activeTab, setActiveTab] = useState<Tab>('documents')
   const [patient, setPatient] = useState<any>(null)
   const [uploads, setUploads] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
@@ -60,12 +60,6 @@ export default function PatientDocumentsPage() {
   }, [patientId])
 
   const TABS: Array<{ key: Tab; label: string; icon: React.ReactNode; count?: number }> = [
-    {
-      key: 'prescription_uploads',
-      label: 'Previous Prescriptions',
-      icon: <Pill size={14} />,
-      count: uploads.length,
-    },
     {
       key: 'documents',
       label: 'Clinical Documents',
@@ -144,15 +138,6 @@ export default function PatientDocumentsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'prescription_uploads' && (
-                <PrescriptionUpload
-                  patientId={patientId}
-                  patientName={`${patient?.first_name || 'Patient'} ${patient?.last_name || ''}`}
-                  uploads={uploads}
-                  onUploadSuccess={fetchData}
-                />
-              )}
-
               {activeTab === 'documents' && (
                 <div className="glass-panel p-6 space-y-4">
                   <h3 className="text-sm font-bold text-white">Clinical Documents & Records</h3>

@@ -77,6 +77,8 @@ export const reportsApi = {
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
+  signup: (payload: any) =>
+    api.post('/auth/signup', payload),
   verifyMfa: (mfaCode: string, tempToken: string) =>
     api.post('/auth/mfa/verify', { mfa_code: mfaCode, temp_token: tempToken }),
   refresh: (refreshToken: string) =>

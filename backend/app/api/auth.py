@@ -97,6 +97,60 @@ async def _log_auth_event(
 
 # ── Endpoints ─────────────────────────────────────────────────────
 
+class SignupRequest(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+    password: str
+    role: str = "doctor" # "doctor" or "admin"
+
+@router.post("/signup", response_model=TokenResponse, summary="Register a new user")
+async def signup(
+    payload: SignupRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    valid, msg = validate_password_strength(payload.password)
+    if not valid:
+        raise HTTPException(status_code=400, detail=msg)
+
+    repo = UserRepository(db)
+    existing = await repo.get_by_email(payload.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    from app.models.user import User
+    new_user = User(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
+        role=payload.role if payload.role in ["doctor", "admin"] else "doctor"
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    token_data = {
+        "sub": str(new_user.id),
+        "org": None,
+        "role": new_user.role,
+        "email": new_user.email,
+    }
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
+
+    token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
+    await repo.store_refresh_token(
+        user_id=str(new_user.id),
+        token_hash=token_hash,
+        expires_days=7,
+        ip_hash=_hash_ip(request),
+    )
+
+    await _log_auth_event(db, "signup.success", str(new_user.id), request)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
 @router.post("/login", response_model=TokenResponse, summary="Login with email/password")
 async def login(
     payload: LoginRequest,

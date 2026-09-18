@@ -206,6 +206,44 @@ class HealthcareRiskPredictor:
             if 'medical_complexity_score' in features.columns:
                 features['complexity_risk'] = np.clip(features['medical_complexity_score'] * 0.2, 0, 0.5)
                 
+            # Rule 9: Dynamic Allergy Cross-Reactivity Risk
+            allergy_col = next((c for c, cat in col_map.items() if cat == "allergies" and c in features.columns), None)
+            drug_col = next((c for c, cat in col_map.items() if cat == "drug_name" and c in features.columns), None)
+            
+            # Map common drug classes to their members or prefixes
+            allergy_classes = {
+                'penicillin': ['cillin', 'augmentin'],
+                'cephalosporin': ['cef', 'ceph'],
+                'sulfa': ['sulfa', 'bactrim', 'septra'],
+                'nsaid': ['ibuprofen', 'naproxen', 'diclofenac', 'ketorolac', 'meloxicam', 'aspirin'],
+                'opioid': ['morphine', 'codeine', 'hydrocodone', 'oxycodone', 'fentanyl', 'tramadol']
+            }
+            
+            if allergy_col and drug_col:
+                features['allergy_conflict_risk'] = 0.0
+                for idx, row in features.iterrows():
+                    allergies_str = str(row[allergy_col]).lower()
+                    drug_str = str(row[drug_col]).lower()
+                    
+                    if allergies_str == 'nan' or allergies_str == 'none' or drug_str == 'nan':
+                        continue
+                        
+                    conflict_found = False
+                    
+                    # Direct match
+                    if drug_str in allergies_str:
+                        conflict_found = True
+                    else:
+                        # Cross-reactivity match
+                        for alg_class, members in allergy_classes.items():
+                            if alg_class in allergies_str:
+                                if any(m in drug_str for m in members):
+                                    conflict_found = True
+                                    break
+                    
+                    if conflict_found:
+                        features.at[idx, 'allergy_conflict_risk'] = 0.6  # Medium-High Risk for allergy conflict
+                        
             # Combine all rule-based risks
             risk_columns = [col for col in features.columns if col.endswith('_risk')]
             if risk_columns:

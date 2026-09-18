@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Pill, User, Save, Plus, PlusCircle, Trash2, ShieldCheck,
-  AlertTriangle, Printer, UploadCloud, CheckCircle2, UserPlus,
+  AlertTriangle, Printer, CheckCircle2, UserPlus,
   Sparkles, Stethoscope, Search, Info, HelpCircle
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescriptionModal'
-import UploadMedicalHistoryModal from '@/components/patients/UploadMedicalHistoryModal'
 
 interface MedicationRow {
   medication: string
@@ -47,7 +46,6 @@ export default function NewPrescriptionPage() {
 
   // Modals
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false)
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
@@ -107,6 +105,7 @@ export default function NewPrescriptionPage() {
       phone: '',
       blood_group: 'O+',
       allergies: '',
+      chronic_conditions: '',
     })
   }
 
@@ -200,14 +199,6 @@ export default function NewPrescriptionPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            className="btn btn-secondary text-xs flex items-center gap-2"
-          >
-            <UploadCloud size={15} className="text-indigo-400" />
-            <span>Upload Previous Rx</span>
-          </button>
-
           <button
             onClick={() => setIsPrintModalOpen(true)}
             className="btn btn-emerald text-xs flex items-center gap-2"
@@ -762,12 +753,6 @@ export default function NewPrescriptionPage() {
         diagnosis={diagnosisContext}
         allergies={matchedPatient?.allergies || ['NKDA']}
         items={items}
-      />
-
-      <UploadMedicalHistoryModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onExtractionComplete={handleUploadedData}
       />
     </div>
   )

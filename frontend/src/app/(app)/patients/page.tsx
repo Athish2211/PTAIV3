@@ -96,7 +96,7 @@ export default function PatientsDirectoryPage() {
               <span className="badge badge-emerald">Clinical Assigned Patients</span>
             ) : (
               <span className="badge badge-cyan flex items-center gap-1">
-                <Lock size={10} /> De-Identified Cohort View (HIPAA Safe Harbor)
+                <Lock size={10} /> De-Identified Cohort View
               </span>
             )}
           </div>
@@ -107,7 +107,7 @@ export default function PatientsDirectoryPage() {
           <p className="text-xs text-[var(--text-secondary)] mt-1">
             {role === 'doctor'
               ? 'Browse clinical profiles, blood groups, contact info, and launch RAG lookups or prescription builders.'
-              : 'HIPAA-compliant longitudinal patient cohort data with redacted personal identifiable information.'}
+              : 'Secure longitudinal patient cohort data with redacted personal identifiable information.'}
           </p>
         </div>
 

@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
+import uuid
+from datetime import date
 from pydantic import BaseModel
 from app.core.rbac import get_current_user
 from app.models.user import User
 from app.core.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.patient_repository import PatientRepository
-import uuid
-from datetime import date
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
 
@@ -39,8 +39,11 @@ async def create_patient(
     # In a real app, generate MRN if missing
     mrn = patient.mrn or f"MRN-{uuid.uuid4().hex[:8].upper()}"
     
+    primary_doctor_id = str(current_user.id) if current_user.role == "doctor" else None
+
     new_patient = await repo.create(
         organization_id=current_user.organization_id,
+        primary_doctor_id=primary_doctor_id,
         first_name=patient.first_name,
         last_name=patient.last_name,
         date_of_birth=patient.date_of_birth,
@@ -61,8 +64,18 @@ async def list_patients(
     db: AsyncSession = Depends(get_db)
 ):
     repo = PatientRepository(db)
-    # Scope to user's organization
-    patients = await repo.list_by_org(str(current_user.organization_id), limit=limit, offset=offset)
+    
+    doctor_id = str(current_user.id) if current_user.role == "doctor" else None
+    patients = await repo.list_by_org(str(current_user.organization_id), limit=limit, offset=offset, doctor_id=doctor_id)
+    
+    # Mask PII for non-doctors (Admins)
+    if current_user.role != "doctor":
+        for p in patients:
+            p.first_name = "***"
+            p.last_name = "***"
+            if p.phone: p.phone = "***"
+            if p.email: p.email = "***"
+            
     return patients
 
 @router.get("/{patient_id}", response_model=PatientResponse)
@@ -72,7 +85,15 @@ async def get_patient(
     db: AsyncSession = Depends(get_db)
 ):
     repo = PatientRepository(db)
-    patient = await repo.get_by_id_and_org(patient_id, str(current_user.organization_id))
+    doctor_id = str(current_user.id) if current_user.role == "doctor" else None
+    patient = await repo.get_by_id_and_org(patient_id, str(current_user.organization_id), doctor_id=doctor_id)
     if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
+        raise HTTPException(status_code=404, detail="Patient not found or unauthorized")
+        
+    if current_user.role != "doctor":
+        patient.first_name = "***"
+        patient.last_name = "***"
+        if patient.phone: patient.phone = "***"
+        if patient.email: patient.email = "***"
+        
     return patient

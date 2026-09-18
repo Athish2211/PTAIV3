@@ -52,7 +52,7 @@ export default function HomePage() {
         </h1>
 
         <p className="text-sm sm:text-base text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
-          Zero-trust clinical care with local SLMs, automated patient auto-match, live Anomaly & Risk Agent checks, hospital-grade paper printing, and HIPAA Safe Harbor de-identification.
+          Zero-trust clinical care with local SLMs, automated patient auto-match, live Anomaly & Risk Agent checks, hospital-grade paper printing, and secure data handling.
         </p>
 
         {/* Dual Track Entry Cards */}

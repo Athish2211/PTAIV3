@@ -317,7 +317,7 @@ export default function VerifyPrescriptionPage() {
             <div className="space-y-1.5 sm:text-right">
               <div className="flex items-center sm:justify-end gap-2 text-cyan-400 font-semibold">
                 <Lock size={15} />
-                <span>HIPAA Safe Harbor Compliant</span>
+                <span>Data Secure</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 Verification timestamp: <span className="text-white font-mono">{verificationTime}</span>

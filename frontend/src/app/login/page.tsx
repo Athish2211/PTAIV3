@@ -33,9 +33,7 @@ export default function LoginPage() {
         router.push('/dashboard')
       }
     } catch (err: any) {
-      // If backend auth is offline, permit standard clinical demo entry
-      localStorage.setItem('ptai_access_token', 'demo-token')
-      router.push('/dashboard')
+      setError(err.response?.data?.detail || 'Invalid credentials or server offline')
     } finally {
       setLoading(false)
     }
@@ -51,8 +49,7 @@ export default function LoginPage() {
       localStorage.setItem('ptai_access_token', res.data?.access_token || 'demo-token')
       router.push('/dashboard')
     } catch (err: any) {
-      localStorage.setItem('ptai_access_token', 'demo-token')
-      router.push('/dashboard')
+      setError(err.response?.data?.detail || 'Invalid MFA code')
     } finally {
       setLoading(false)
     }
@@ -100,7 +97,7 @@ export default function LoginPage() {
           <span>·</span>
           <span>pgvector Knowledge Store</span>
           <span>·</span>
-          <span>HIPAA Safe Harbor</span>
+          <span>Secure Access</span>
         </div>
       </div>
 

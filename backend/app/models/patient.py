@@ -1,7 +1,7 @@
 """Patient and PatientIdentifier models."""
 import uuid
 from datetime import date
-from sqlalchemy import String, Boolean, ForeignKey, Date, Text, Enum as SAEnum
+from sqlalchemy import String, Boolean, ForeignKey, Date, Text, Enum as SAEnum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import TimeStampedModel
@@ -9,10 +9,16 @@ from app.models.base import TimeStampedModel
 
 class Patient(TimeStampedModel):
     __tablename__ = "patients"
+    __table_args__ = (
+        UniqueConstraint('primary_doctor_id', 'first_name', 'last_name', name='uq_doctor_patient_name'),
+    )
 
     # Scope
     organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    primary_doctor_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     # Identity
     mrn: Mapped[str] = mapped_column(String(100), nullable=False, index=True)  # Medical Record Number

@@ -7,10 +7,11 @@ import {
   Users, Pill, Activity, Bot, PlusCircle, Search,
   ArrowRight, ShieldCheck, FileUp, Printer, AlertTriangle,
   Clock, TrendingUp, Sparkles, Stethoscope, ChevronRight,
-  RotateCcw, CheckCircle2, Calendar, FileText
+  RotateCcw, CheckCircle2, Calendar, FileText, BarChart2
 } from 'lucide-react'
 import { useRole, PrescriptionRecord } from '@/context/RoleContext'
 import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescriptionModal'
+import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis } from 'recharts'
 
 export default function DashboardPage() {
   const { role, patients, prescriptions, clearAllData } = useRole()
@@ -40,6 +41,19 @@ export default function DashboardPage() {
   const uniqueCohorts = new Set(
     patients.flatMap((p) => p.chronic_conditions || []).filter((c) => c && !c.includes('Newly registered'))
   ).size
+
+  // Chart data
+  const activityData = React.useMemo(() => {
+    const dates = prescriptions.map(p => new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))
+    const counts = dates.reduce((acc, date) => { acc[date] = (acc[date] || 0) + 1; return acc; }, {} as Record<string, number>)
+    return Object.entries(counts).map(([date, count]) => ({ date, prescriptions: count }))
+  }, [prescriptions])
+
+  const riskData = React.useMemo(() => {
+    const levels = { Low: 0, Moderate: 0, High: 0 }
+    patients.forEach(p => { if (p.risk_level && levels[p.risk_level as keyof typeof levels] !== undefined) levels[p.risk_level as keyof typeof levels]++ })
+    return Object.entries(levels).map(([level, count]) => ({ level, count }))
+  }, [patients])
 
   const handleResetData = () => {
     if (window.confirm('Are you sure you want to clear all patient and prescription records? This will return the EHR to a clean 0-data state.')) {
@@ -240,6 +254,36 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Clinical Activity Trend */}
+          <div className="glass-panel p-6 space-y-4">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <TrendingUp size={16} className="text-indigo-400" />
+              <span>Clinical Activity Trend</span>
+            </h3>
+            {activityData.length > 0 ? (
+              <div className="h-48 w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData}>
+                    <defs>
+                      <linearGradient id="colorRx" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} />
+                    <YAxis stroke="#64748b" fontSize={10} allowDecimals={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} />
+                    <Area type="monotone" dataKey="prescriptions" stroke="#6366f1" fillOpacity={1} fill="url(#colorRx)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-xs text-[var(--text-muted)] p-8 text-center border border-dashed border-white/10 rounded-xl">
+                No activity data to chart yet.
+              </div>
+            )}
+          </div>
+
           {/* ── RECENT PRESCRIPTIONS & CLINICAL ACTIVITY ── */}
           <div className="glass-panel p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
@@ -347,7 +391,7 @@ export default function DashboardPage() {
           <div className="glass-panel p-6 border-cyan-500/20 bg-gradient-to-r from-cyan-950/30 to-indigo-950/20">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <span className="badge badge-cyan mb-2">HIPAA Safe Harbor Compliance Enabled</span>
+                <span className="badge badge-cyan mb-2">Security Guardrails Enabled</span>
                 <h2 className="text-xl font-bold text-white">Aggregated Population Intelligence Center</h2>
                 <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-2xl">
                   You are viewing de-identified patient data (`PT-ANON-XXXX`). All analytics are generated via the 4 ML/DL agents (Trend, Anomaly, Risk, and Cohort) operating over the live clinical registry.
@@ -380,6 +424,60 @@ export default function DashboardPage() {
               <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Trend Agent</div>
               <div className="text-2xl font-black text-emerald-400">{totalPrescriptions} Total Rx</div>
               <div className="text-[11px] text-[var(--text-secondary)] mt-1">Total prescription volume recorded</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="glass-panel p-6 space-y-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <BarChart2 size={16} className="text-amber-400" />
+                <span>Risk Stratification Overview</span>
+              </h3>
+              {riskData.length > 0 ? (
+                <div className="h-64 w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={riskData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <XAxis dataKey="level" stroke="#64748b" fontSize={10} />
+                      <YAxis stroke="#64748b" fontSize={10} allowDecimals={false} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                      <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-xs text-[var(--text-muted)] p-8 text-center border border-dashed border-white/10 rounded-xl">
+                  No risk data to chart yet.
+                </div>
+              )}
+            </div>
+
+            <div className="glass-panel p-6 space-y-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <TrendingUp size={16} className="text-emerald-400" />
+                <span>Prescription Volume Trend</span>
+              </h3>
+              {activityData.length > 0 ? (
+                <div className="h-64 w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorRxAdmin" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" stroke="#64748b" fontSize={10} />
+                      <YAxis stroke="#64748b" fontSize={10} allowDecimals={false} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} />
+                      <Area type="monotone" dataKey="prescriptions" stroke="#10b981" fillOpacity={1} fill="url(#colorRxAdmin)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-xs text-[var(--text-muted)] p-8 text-center border border-dashed border-white/10 rounded-xl">
+                  No activity data to chart yet.
+                </div>
+              )}
             </div>
           </div>
         </div>

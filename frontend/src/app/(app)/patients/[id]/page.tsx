@@ -91,7 +91,7 @@ export default function PatientDetailPage() {
   }
 
   const patientPrescriptions = prescriptions.filter(
-    (rx) => rx.patient_name.toLowerCase().includes(patient?.name?.toLowerCase() || '') || rx.mrn === patient?.mrn
+    (rx) => (rx.patient_name?.toLowerCase() || '').includes(patient?.name?.toLowerCase() || '') || rx.mrn === patient?.mrn
   )
 
   if (loading) {
@@ -333,7 +333,7 @@ export default function PatientDetailPage() {
                         <span className="text-[var(--text-muted)] font-mono">{rx.date}</span>
                       </div>
                       <div className="space-y-1 text-xs text-[var(--text-secondary)]">
-                        {rx.medications.map((m, idx) => (
+                        {rx.medications?.map((m, idx) => (
                           <div key={idx}>
                             • <strong className="text-white">{m.medication}</strong> ({m.dosage}) — {m.frequency} for {m.duration_days} days
                           </div>
