@@ -1,0 +1,192 @@
+'use client'
+
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { Pill, PlusCircle, Search, Printer, Calendar, ShieldCheck, User, Filter, AlertTriangle, Trash2 } from 'lucide-react'
+import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescriptionModal'
+import { useRole, PrescriptionRecord } from '@/context/RoleContext'
+
+export default function PrescriptionsListPage() {
+  const { prescriptions, patients, deletePrescription } = useRole()
+  const [search, setSearch] = useState('')
+  const [selectedRxForPrint, setSelectedRxForPrint] = useState<PrescriptionRecord | null>(null)
+
+  const filtered = prescriptions.filter(
+    (p) =>
+      p.patient_name.toLowerCase().includes(search.toLowerCase()) ||
+      p.mrn.toLowerCase().includes(search.toLowerCase()) ||
+      p.diagnosis.toLowerCase().includes(search.toLowerCase()) ||
+      p.medications.some((m) => m.medication.toLowerCase().includes(search.toLowerCase()))
+  )
+
+  const getPatientForRx = (rx: PrescriptionRecord) => {
+    return patients.find((p) => p.id === rx.patient_id || p.mrn === rx.mrn)
+  }
+
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Delete prescription for ${name}?`)) {
+      deletePrescription(id)
+    }
+  }
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-6">
+        <div>
+          <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
+            <Pill size={24} className="text-emerald-400" />
+            <span>Prescriptions Directory</span>
+          </h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
+            Browse digital prescriptions, inspect active regimens, and reprint physical prescription sheets.
+          </p>
+        </div>
+
+        <Link href="/prescriptions/new" className="btn btn-primary text-xs flex items-center gap-2">
+          <PlusCircle size={15} />
+          <span>New Prescription</span>
+        </Link>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="glass-panel p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:w-80">
+          <Search size={15} className="absolute left-3.5 top-3 text-[var(--text-muted)]" />
+          <input
+            type="text"
+            className="input-field pl-9 text-xs"
+            placeholder="Search patient, MRN or drug..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto text-xs text-[var(--text-muted)]">
+          <span>Showing {filtered.length} Prescription{filtered.length === 1 ? '' : 's'}</span>
+        </div>
+      </div>
+
+      {/* Prescriptions Table */}
+      <div className="glass-panel overflow-hidden">
+        {filtered.length > 0 ? (
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-[var(--border-subtle)] bg-white/[0.02] text-[var(--text-muted)] uppercase text-[10px] font-bold">
+                <th className="p-4">Patient / MRN</th>
+                <th className="p-4">Prescription Date</th>
+                <th className="p-4">Diagnosis</th>
+                <th className="p-4">Prescribed Items</th>
+                <th className="p-4">AI Safety Status</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {filtered.map((rx) => {
+                const patient = getPatientForRx(rx)
+                return (
+                  <tr key={rx.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="p-4">
+                      <div className="font-bold text-white text-sm">{rx.patient_name}</div>
+                      <div className="text-[11px] font-mono text-indigo-400">
+                        {rx.mrn} · {rx.age}y/{rx.gender}
+                        {patient?.blood_group && (
+                          <span className="ml-1.5 text-rose-400 font-bold">({patient.blood_group})</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-[var(--text-secondary)]">
+                      <div className="flex items-center gap-1.5 font-mono">
+                        <Calendar size={13} className="text-[var(--text-muted)]" />
+                        {rx.date}
+                      </div>
+                    </td>
+                    <td className="p-4 font-medium text-white max-w-xs truncate">
+                      {rx.diagnosis}
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-0.5 max-w-sm">
+                        {rx.medications.map((m, i) => (
+                          <div key={i} className="text-[11px] text-[var(--text-secondary)] truncate">
+                            • <strong className="text-white">{m.medication}</strong> ({m.dosage}) — {m.frequency}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      {rx.risk_status === 'normal' ? (
+                        <span className="badge badge-emerald flex items-center gap-1">
+                          <ShieldCheck size={11} /> Verified
+                        </span>
+                      ) : (
+                        <span className="badge badge-rose flex items-center gap-1">
+                          <AlertTriangle size={11} /> Anomaly Alert
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setSelectedRxForPrint(rx)}
+                          className="btn btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 hover:text-emerald-400 hover:border-emerald-500/30"
+                          title="Print medical prescription with verifiable QR"
+                        >
+                          <Printer size={13} />
+                          <span>Print Rx</span>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(rx.id, rx.patient_name)}
+                          className="btn btn-ghost text-xs p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"
+                          title="Delete Prescription"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="p-12 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+              <Pill size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-white">No Prescriptions Recorded</h3>
+              <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto">
+                No active or dispensed prescriptions found. Create a prescription to generate cryptographic QR tokens and paper printouts.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Link href="/prescriptions/new" className="btn btn-primary text-xs inline-flex items-center gap-1.5">
+                <PlusCircle size={14} />
+                <span>Create New Prescription</span>
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Print Modal */}
+      {selectedRxForPrint && (
+        <PrintPrescriptionModal
+          isOpen={!!selectedRxForPrint}
+          onClose={() => setSelectedRxForPrint(null)}
+          prescriptionId={selectedRxForPrint.id}
+          date={selectedRxForPrint.date}
+          patientName={selectedRxForPrint.patient_name}
+          patientAge={selectedRxForPrint.age}
+          patientGender={selectedRxForPrint.gender}
+          patientMrn={selectedRxForPrint.mrn}
+          patientBloodGroup={getPatientForRx(selectedRxForPrint)?.blood_group || 'O+'}
+          patientPhone={getPatientForRx(selectedRxForPrint)?.phone || 'N/A'}
+          diagnosis={selectedRxForPrint.diagnosis}
+          allergies={getPatientForRx(selectedRxForPrint)?.allergies || ['NKDA']}
+          items={selectedRxForPrint.medications}
+        />
+      )}
+    </div>
+  )
+}
