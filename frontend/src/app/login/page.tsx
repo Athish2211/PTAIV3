@@ -130,7 +130,7 @@ export default function LoginPage() {
                       <input
                         type="email"
                         required
-                        className="input-field pl-10 text-xs"
+                        className="input-field !pl-10 text-xs"
                         placeholder="doctor@hospital.org"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -152,7 +152,7 @@ export default function LoginPage() {
                       <input
                         type="password"
                         required
-                        className="input-field pl-10 text-xs"
+                        className="input-field !pl-10 text-xs"
                         placeholder="••••••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

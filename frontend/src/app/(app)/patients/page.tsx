@@ -134,7 +134,7 @@ export default function PatientsDirectoryPage() {
           <Search size={15} className="absolute left-3.5 top-3 text-[var(--text-muted)]" />
           <input
             type="text"
-            className="input-field pl-9 text-xs"
+            className="input-field !pl-9 text-xs"
             placeholder={
               role === 'doctor'
                 ? "Search patient name, MRN, phone, blood group..."
