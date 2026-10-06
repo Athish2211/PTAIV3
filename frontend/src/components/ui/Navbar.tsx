@@ -60,7 +60,10 @@ export default function Navbar() {
         </button>
 
         {/* Notifications */}
-        <button className="btn btn-ghost btn-icon relative text-[var(--text-muted)] hover:text-white flex-shrink-0" aria-label="Alerts">
+        <button 
+          onClick={() => alert("System Telemetry: 0 New High-Risk Alerts. Anomaly Agent is monitoring active prescriptions.")}
+          className="btn btn-ghost btn-icon relative text-[var(--text-muted)] hover:text-white flex-shrink-0" aria-label="Alerts"
+        >
           <Bell size={16} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[var(--brand-500)]" />
         </button>
