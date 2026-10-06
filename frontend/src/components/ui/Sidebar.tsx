@@ -27,16 +27,13 @@ export default function Sidebar() {
 
   const adminNav = [
     { href: '/dashboard', label: 'Overview', icon: Home, highlight: true },
-    { href: '/doctors', label: 'Doctors', icon: Stethoscope },
-    { href: '/patients', label: 'Patients', icon: Users },
-    { href: '/diseases', label: 'Diseases', icon: Bug },
-    { href: '/medicines', label: 'Medicines', icon: Pill },
+    { href: '/patients', label: 'Patient Registry', icon: Users },
     { href: '/prescriptions', label: 'Prescriptions', icon: FileText },
-    { href: '/risk-analytics', label: 'Risk Analytics', icon: AlertTriangle },
-    { href: '/anomalies', label: 'Anomalies', icon: Search },
-    { href: '/patient-cohorts', label: 'Patient Cohorts', icon: Users },
-    { href: '/trends', label: 'Trends & Forecasts', icon: TrendingUp },
-    { href: '/reports', label: 'Reports', icon: BarChart },
+    { href: '/analytics?tab=trend', label: 'Trends & Forecasts', icon: TrendingUp },
+    { href: '/analytics?tab=anomaly', label: 'Anomaly Detection', icon: Search },
+    { href: '/analytics?tab=risk', label: 'Risk Analytics', icon: AlertTriangle },
+    { href: '/analytics?tab=cohort', label: 'Patient Cohorts', icon: Users },
+    { href: '/reports', label: 'System Reports', icon: BarChart },
   ]
 
   const navItems = role === 'doctor' ? doctorNav : adminNav
