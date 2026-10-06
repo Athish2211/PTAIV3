@@ -269,7 +269,7 @@ html, body {
   }
 
   /* Reset document flow and force white background */
-  html, body {
+  html, body, .bg-\[var\(--bg-base\)\] {
     background: #ffffff !important;
     color: #0f172a !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
