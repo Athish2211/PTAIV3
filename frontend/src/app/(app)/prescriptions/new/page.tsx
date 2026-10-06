@@ -812,8 +812,6 @@ export default function NewPrescriptionPage() {
         )}
       </div>
 
-      </div>
-
       {/* ── ACTION BAR ── */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel p-5 mt-6 border-indigo-500/30">
         <div className="text-xs text-[var(--text-secondary)]">
