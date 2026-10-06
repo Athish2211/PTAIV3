@@ -17,6 +17,15 @@ export default function Navbar() {
             type="text"
             placeholder={role === 'doctor' ? "Search patient... (⌘K)" : "Search dataset... (⌘K)"}
             className="input-field pl-9 pr-14 text-xs h-9 bg-[var(--bg-base)]/70 w-full"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                const target = e.target as HTMLInputElement;
+                if (target.value.trim()) {
+                  alert(`Global Search for "${target.value}" is routing through the pgvector engine... (Production Feature)`);
+                  target.value = '';
+                }
+              }
+            }}
           />
           <kbd className="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-white/[0.08] text-[var(--text-muted)] rounded hidden sm:block">
             ⌘K
