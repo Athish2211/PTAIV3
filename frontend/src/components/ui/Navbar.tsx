@@ -9,29 +9,8 @@ export default function Navbar() {
 
   return (
     <header className="no-print border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]/60 backdrop-blur-md px-4 py-3 sm:h-16 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sticky top-0 z-40">
-      {/* Left: Quick Search */}
-      <div className="flex items-center gap-4 w-full sm:flex-1 sm:max-w-md">
-        <div className="relative w-full">
-          <Search size={15} className="absolute left-3.5 top-3 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder={role === 'doctor' ? "Search patient... (⌘K)" : "Search dataset... (⌘K)"}
-            className="input-field pl-9 pr-14 text-xs h-9 bg-[var(--bg-base)]/70 w-full"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                const target = e.target as HTMLInputElement;
-                if (target.value.trim()) {
-                  alert(`Global Search for "${target.value}" is routing through the pgvector engine... (Production Feature)`);
-                  target.value = '';
-                }
-              }
-            }}
-          />
-          <kbd className="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-white/[0.08] text-[var(--text-muted)] rounded hidden sm:block">
-            ⌘K
-          </kbd>
-        </div>
-      </div>
+      {/* Left (Empty to push right items to end) */}
+      <div className="flex-1 hidden sm:block"></div>
 
       {/* Right: Role Status, Switcher & System Telemetry */}
       <div className="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-4 overflow-x-auto pb-1 sm:pb-0">
