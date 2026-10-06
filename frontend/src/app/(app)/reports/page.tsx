@@ -121,7 +121,7 @@ This clinical report was synthesized using the **PTAI v3 Multi-Agent Pipeline** 
 
       {/* Generated Report Card */}
       {report && (
-        <div className="glass-panel p-8 space-y-6">
+        <div className="glass-panel p-8 space-y-6 printable-report">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
             <div>
               <span className="badge badge-emerald text-[10px] mb-2">Verified AI Synthesis</span>
