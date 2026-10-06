@@ -30,6 +30,9 @@ export default function HomePage() {
             <Cpu size={13} />
             <span>Local SLM Active (Ollama)</span>
           </div>
+          <Link href="/login" className="text-xs font-medium text-[var(--text-secondary)] hover:text-white transition-colors">
+            Sign In
+          </Link>
           <Link href="/dashboard" className="btn btn-primary text-xs py-2 px-4 shadow-lg shadow-indigo-500/25">
             <span>Enter EHR Portal</span>
             <ArrowRight size={14} />
