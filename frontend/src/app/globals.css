@@ -318,8 +318,8 @@ html, body {
     background: #ffffff !important;
   }
 
-  /* Clean prescription paper sheet */
-  .printable-prescription {
+  /* Clean paper sheets for print */
+  .printable-prescription, .printable-report {
     display: block !important;
     position: static !important;
     width: 100% !important;
@@ -330,6 +330,11 @@ html, body {
     box-shadow: none !important;
     border: none !important;
     page-break-inside: avoid;
+  }
+
+  .printable-report *, .printable-report .text-white, .printable-report .text-slate-200, .printable-report .prose-invert {
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
   }
 
   /* Force exact color reproduction for print ink */
