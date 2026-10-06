@@ -7,7 +7,7 @@ import {
   Users, Pill, Activity, Bot, PlusCircle, Search,
   ArrowRight, ShieldCheck, FileUp, Printer, AlertTriangle,
   Clock, TrendingUp, Sparkles, Stethoscope, ChevronRight,
-  RotateCcw, CheckCircle2, Calendar, FileText, BarChart2
+  RotateCcw, CheckCircle2, Calendar, FileText, BarChart2, Database
 } from 'lucide-react'
 import { useRole, PrescriptionRecord } from '@/context/RoleContext'
 import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescriptionModal'
@@ -75,17 +75,17 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="badge badge-emerald">
-              {role === 'doctor' ? 'Clinical Session Active' : 'De-Identified Analytics Mode'}
+              {role === 'doctor' ? 'Clinical Session Active' : 'Medical Administration'}
             </span>
             <span className="text-xs text-[var(--text-muted)] font-mono">{currentTime}</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            {role === 'doctor' ? 'Clinical Command Hub' : 'Population Health & Analytics Center'}
+            {role === 'doctor' ? 'Clinical Command Hub' : 'Medical Administration Overview'}
           </h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
             {role === 'doctor'
               ? 'Select a clinical action to begin patient consultation, prescription creation, or data review.'
-              : 'Aggregated macro trends, anomaly detection, and population-level clinical intelligence.'}
+              : 'Drillable metrics from Organization → Doctor → Patient → Clinical Record.'}
           </p>
         </div>
 
@@ -386,98 +386,80 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        /* ── DATA ADMINISTRATOR / CMO OVERVIEW ── */
-        <div className="space-y-6">
-          <div className="glass-panel p-6 border-cyan-500/20 bg-gradient-to-r from-cyan-950/30 to-indigo-950/20">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <span className="badge badge-cyan mb-2">Security Guardrails Enabled</span>
-                <h2 className="text-xl font-bold text-white">Aggregated Population Intelligence Center</h2>
-                <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-2xl">
-                  You are viewing de-identified patient data (`PT-ANON-XXXX`). All analytics are generated via the 4 ML/DL agents (Trend, Anomaly, Risk, and Cohort) operating over the live clinical registry.
-                </p>
+        /* ── MEDICAL ADMINISTRATION DATABASE ACCESS STRUCTURE ── */
+        <div className="space-y-8 py-4 max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-extrabold text-white/90 uppercase tracking-widest mb-2">
+              Medical Administration Database Access
+            </h2>
+            <h3 className="text-xl font-medium text-rose-200/70">Structure</h3>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center md:items-stretch gap-8 md:gap-12 relative w-full justify-center">
+            
+            {/* Level 1: Administrator */}
+            <div className="flex-shrink-0 w-64 flex flex-col justify-center relative z-10">
+              <div className="glass-panel p-8 border-rose-500/40 bg-gradient-to-br from-[#8b2e4b] to-[#591b2f] shadow-2xl text-center rounded-3xl relative">
+                <h3 className="text-lg font-bold text-white mb-2">Medical<br/>Administrator</h3>
+                <p className="text-[11px] text-white/80 font-medium">Chief Medical Officer<br/>of the Department of<br/>Medicine</p>
+                {/* Right connector */}
+                <div className="hidden md:block absolute top-1/2 -right-12 w-12 h-0.5 bg-rose-200/30"></div>
               </div>
-              <Link href="/analytics" className="btn btn-secondary text-xs flex items-center gap-2">
-                <Activity size={14} className="text-cyan-400" />
-                <span>Open Analytics Pipeline</span>
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="glass-panel p-5">
-              <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Anomaly Agent</div>
-              <div className="text-2xl font-black text-rose-400">{anomalyFlags} Outliers</div>
-              <div className="text-[11px] text-[var(--text-secondary)] mt-1">Dosage or interaction irregularities flagged</div>
-            </div>
-            <div className="glass-panel p-5">
-              <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Risk Agent</div>
-              <div className="text-2xl font-black text-amber-400">{highRiskPatients} Patients</div>
-              <div className="text-[11px] text-[var(--text-secondary)] mt-1">High polypharmacy or clinical risk score</div>
-            </div>
-            <div className="glass-panel p-5">
-              <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Cohort Agent</div>
-              <div className="text-2xl font-black text-cyan-400">{uniqueCohorts} Cohorts</div>
-              <div className="text-[11px] text-[var(--text-secondary)] mt-1">Demographic and chronic segments mapped</div>
-            </div>
-            <div className="glass-panel p-5">
-              <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">Trend Agent</div>
-              <div className="text-2xl font-black text-emerald-400">{totalPrescriptions} Total Rx</div>
-              <div className="text-[11px] text-[var(--text-secondary)] mt-1">Total prescription volume recorded</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div className="glass-panel p-6 space-y-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <BarChart2 size={16} className="text-amber-400" />
-                <span>Risk Stratification Overview</span>
-              </h3>
-              {riskData.length > 0 ? (
-                <div className="h-64 w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={riskData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <XAxis dataKey="level" stroke="#64748b" fontSize={10} />
-                      <YAxis stroke="#64748b" fontSize={10} allowDecimals={false} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
-                      <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="text-xs text-[var(--text-muted)] p-8 text-center border border-dashed border-white/10 rounded-xl">
-                  No risk data to chart yet.
-                </div>
-              )}
             </div>
 
-            <div className="glass-panel p-6 space-y-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <TrendingUp size={16} className="text-emerald-400" />
-                <span>Prescription Volume Trend</span>
-              </h3>
-              {activityData.length > 0 ? (
-                <div className="h-64 w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorRxAdmin" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <XAxis dataKey="date" stroke="#64748b" fontSize={10} />
-                      <YAxis stroke="#64748b" fontSize={10} allowDecimals={false} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} />
-                      <Area type="monotone" dataKey="prescriptions" stroke="#10b981" fillOpacity={1} fill="url(#colorRxAdmin)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
+            {/* Level 2: Database Access */}
+            <div className="flex-shrink-0 w-64 flex flex-col justify-center relative z-10">
+              <div className="glass-panel p-8 border-rose-400/40 bg-gradient-to-br from-[#bc566a] to-[#993b4e] shadow-2xl text-center rounded-3xl relative">
+                <div className="mx-auto w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 text-white shadow-inner">
+                  <Database size={24} />
                 </div>
-              ) : (
-                <div className="text-xs text-[var(--text-muted)] p-8 text-center border border-dashed border-white/10 rounded-xl">
-                  No activity data to chart yet.
+                <h3 className="text-lg font-bold text-white mb-2">Departmental Data<br/>Access</h3>
+                <p className="text-[11px] text-white/90 font-medium">Full access to all<br/>departmental records</p>
+                {/* Right connector root */}
+                <div className="hidden md:block absolute top-1/2 -right-12 w-12 h-0.5 bg-rose-200/30"></div>
+              </div>
+            </div>
+
+            {/* Level 3: Modules */}
+            <div className="flex-shrink-0 w-64 flex flex-col gap-5 relative z-10 py-4">
+              {/* Vertical connector line */}
+              <div className="hidden md:block absolute top-12 bottom-14 -left-12 w-0.5 bg-rose-200/30"></div>
+
+              {/* Module 1 */}
+              <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-300/80 transition-colors bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg">
+                <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                <h4 className="text-[13px] font-bold text-white mb-1">Doctor Management</h4>
+                <p className="text-[10px] text-white/90 leading-snug">Access to doctors and their professional data</p>
+              </div>
+
+              {/* Module 2 */}
+              <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-300/80 transition-colors bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg">
+                <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                <h4 className="text-[13px] font-bold text-white mb-1">Clinical Analysis</h4>
+                <p className="text-[10px] text-white/90 leading-snug">Reviewing analysis and prescribing patterns</p>
+              </div>
+
+              {/* Module 3 */}
+              <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-300/80 transition-colors bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg">
+                <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                <h4 className="text-[13px] font-bold text-white mb-1">Anomaly Detection</h4>
+                <p className="text-[10px] text-white/90 leading-snug">Identifying irregularities in prescribing patterns</p>
+              </div>
+
+              {/* Module 4 (Stacked visual) */}
+              <div className="relative mt-2">
+                <div className="absolute top-2 left-2 right-[-8px] bottom-[-8px] border border-rose-900/50 rounded-xl bg-[#8c3149]"></div>
+                <div className="absolute top-1 left-1 right-[-4px] bottom-[-4px] border border-rose-800/50 rounded-xl bg-[#a43e59]"></div>
+                
+                <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-200/80 transition-colors bg-gradient-to-br from-[#df7c94] to-[#b94a64] rounded-xl relative z-10 shadow-xl">
+                  <div className="hidden md:block absolute top-1/2 -left-14 w-14 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                  <h4 className="text-[13px] font-bold text-white mb-1">System Modules</h4>
+                  <p className="text-[10px] text-white/90 leading-relaxed">
+                    Overview, Patients, Diseases, Medicines, Prescriptions, Risk Analytics, Patient Cohorts, Trends, Reports
+                  </p>
                 </div>
-              )}
+              </div>
+
             </div>
           </div>
         </div>

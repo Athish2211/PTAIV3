@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, Pill, Activity, Bot, ShieldCheck,
-  ChevronRight, Stethoscope, PlusCircle, Lock, Menu, X, FileText
+  ChevronRight, Stethoscope, PlusCircle, Lock, Menu, X, FileText,
+  Home, Bug, AlertTriangle, Search, TrendingUp, BarChart
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 
@@ -25,11 +26,17 @@ export default function Sidebar() {
   ]
 
   const adminNav = [
-    { href: '/analytics', label: 'Aggregated Analytics', icon: Activity, highlight: true },
-    { href: '/patients', label: 'De-Identified Data', icon: Users },
-    { href: '/privacy', label: 'Privacy & Encryption', icon: Lock },
-    { href: '/reports', label: 'Executive Reports', icon: FileText },
-    { href: '/dashboard', label: 'System Overview', icon: LayoutDashboard },
+    { href: '/dashboard', label: 'Overview', icon: Home, highlight: true },
+    { href: '/doctors', label: 'Doctors', icon: Stethoscope },
+    { href: '/patients', label: 'Patients', icon: Users },
+    { href: '/diseases', label: 'Diseases', icon: Bug },
+    { href: '/medicines', label: 'Medicines', icon: Pill },
+    { href: '/prescriptions', label: 'Prescriptions', icon: FileText },
+    { href: '/risk-analytics', label: 'Risk Analytics', icon: AlertTriangle },
+    { href: '/anomalies', label: 'Anomalies', icon: Search },
+    { href: '/patient-cohorts', label: 'Patient Cohorts', icon: Users },
+    { href: '/trends', label: 'Trends & Forecasts', icon: TrendingUp },
+    { href: '/reports', label: 'Reports', icon: BarChart },
   ]
 
   const navItems = role === 'doctor' ? doctorNav : adminNav
@@ -90,7 +97,7 @@ export default function Sidebar() {
           </div>
           <div className="flex items-center gap-2 text-xs font-semibold text-white">
             <span className={`w-2 h-2 rounded-full ${role === 'doctor' ? 'bg-emerald-400' : 'bg-cyan-400'}`} />
-            {role === 'doctor' ? 'Doctor Workstation' : 'CMO / Admin Console'}
+            {role === 'doctor' ? 'Doctor Workstation' : 'Medical Administration'}
           </div>
         </div>
       )}
