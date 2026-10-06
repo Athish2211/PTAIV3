@@ -426,39 +426,45 @@ export default function DashboardPage() {
               <div className="hidden md:block absolute top-12 bottom-14 -left-12 w-0.5 bg-rose-200/30"></div>
 
               {/* Module 1 */}
-              <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-300/80 transition-colors bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg">
-                <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
-                <h4 className="text-[13px] font-bold text-white mb-1">Doctor Management</h4>
-                <p className="text-[10px] text-white/90 leading-snug">Access to doctors and their professional data</p>
-              </div>
+              <Link href="/doctors" className="block relative z-20 group">
+                <div className="glass-panel p-5 border-rose-300/40 group-hover:border-rose-300/80 group-hover:scale-[1.02] transition-all bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg cursor-pointer">
+                  <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                  <h4 className="text-[13px] font-bold text-white mb-1">Doctor Management</h4>
+                  <p className="text-[10px] text-white/90 leading-snug">Access to doctors and their professional data</p>
+                </div>
+              </Link>
 
               {/* Module 2 */}
-              <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-300/80 transition-colors bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg">
-                <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
-                <h4 className="text-[13px] font-bold text-white mb-1">Clinical Analysis</h4>
-                <p className="text-[10px] text-white/90 leading-snug">Reviewing analysis and prescribing patterns</p>
-              </div>
+              <Link href="/analytics" className="block relative z-20 group">
+                <div className="glass-panel p-5 border-rose-300/40 group-hover:border-rose-300/80 group-hover:scale-[1.02] transition-all bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg cursor-pointer">
+                  <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                  <h4 className="text-[13px] font-bold text-white mb-1">Clinical Analysis</h4>
+                  <p className="text-[10px] text-white/90 leading-snug">Reviewing analysis and prescribing patterns</p>
+                </div>
+              </Link>
 
               {/* Module 3 */}
-              <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-300/80 transition-colors bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg">
-                <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
-                <h4 className="text-[13px] font-bold text-white mb-1">Anomaly Detection</h4>
-                <p className="text-[10px] text-white/90 leading-snug">Identifying irregularities in prescribing patterns</p>
-              </div>
+              <Link href="/analytics?tab=anomalies" className="block relative z-20 group">
+                <div className="glass-panel p-5 border-rose-300/40 group-hover:border-rose-300/80 group-hover:scale-[1.02] transition-all bg-gradient-to-r from-[#d16f86] to-[#b34c63] rounded-xl relative shadow-lg cursor-pointer">
+                  <div className="hidden md:block absolute top-1/2 -left-12 w-12 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
+                  <h4 className="text-[13px] font-bold text-white mb-1">Anomaly Detection</h4>
+                  <p className="text-[10px] text-white/90 leading-snug">Identifying irregularities in prescribing patterns</p>
+                </div>
+              </Link>
 
               {/* Module 4 (Stacked visual) */}
-              <div className="relative mt-2">
+              <Link href="/dashboard" className="block relative mt-2 z-20 group">
                 <div className="absolute top-2 left-2 right-[-8px] bottom-[-8px] border border-rose-900/50 rounded-xl bg-[#8c3149]"></div>
                 <div className="absolute top-1 left-1 right-[-4px] bottom-[-4px] border border-rose-800/50 rounded-xl bg-[#a43e59]"></div>
                 
-                <div className="glass-panel p-5 border-rose-300/40 hover:border-rose-200/80 transition-colors bg-gradient-to-br from-[#df7c94] to-[#b94a64] rounded-xl relative z-10 shadow-xl">
+                <div className="glass-panel p-5 border-rose-300/40 group-hover:border-rose-200/80 transition-colors bg-gradient-to-br from-[#df7c94] to-[#b94a64] rounded-xl relative z-10 shadow-xl cursor-pointer">
                   <div className="hidden md:block absolute top-1/2 -left-14 w-14 h-[calc(0.5px)] bg-rose-200/30" style={{borderTop: '2px dotted rgba(254, 205, 211, 0.4)'}}></div>
                   <h4 className="text-[13px] font-bold text-white mb-1">System Modules</h4>
                   <p className="text-[10px] text-white/90 leading-relaxed">
                     Overview, Patients, Diseases, Medicines, Prescriptions, Risk Analytics, Patient Cohorts, Trends, Reports
                   </p>
                 </div>
-              </div>
+              </Link>
 
             </div>
           </div>
