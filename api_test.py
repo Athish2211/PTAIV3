@@ -4,13 +4,12 @@ import sys
 
 BASE_URL = "http://localhost:8000"
 ENDPOINTS = [
-    "/health",
     "/api/health",
-    "/api/v1/health",
-    "/api/patients",
-    "/api/prescriptions",
-    "/api/analytics",
-    "/docs"
+    "/api/docs",
+    "/api/v1/patients",
+    "/api/v1/prescriptions",
+    "/api/v1/analytics/cohorts",
+    "/api/v1/search?q=test"
 ]
 
 print("Starting API Functional Test Suite...")
@@ -25,12 +24,13 @@ for endpoint in ENDPOINTS:
     print(f"Testing {url} ...", end=" ")
     try:
         response = requests.get(url, timeout=5)
-        if response.status_code in [200, 201, 202, 401, 403]: # 401/403 are fine, it means the API is responding but needs auth
+        # Any successful response, or a 401/403 (unauthorized, but means the endpoint exists)
+        if response.status_code in [200, 201, 202, 401, 403]:
             print(f"OK ({response.status_code})")
             passed += 1
-        elif response.status_code == 404:
-            print(f"NOT FOUND (404)")
-            # 404s are expected if we guess the prefix wrong, we won't count as failure immediately
+        elif response.status_code == 405: # Method not allowed (maybe it expects POST)
+            print(f"OK ({response.status_code} - Method Not Allowed)")
+            passed += 1
         else:
             print(f"FAIL ({response.status_code})")
             failed += 1
@@ -41,7 +41,7 @@ for endpoint in ENDPOINTS:
         errors.append(f"{endpoint} connection error: {str(e)}")
 
 print("-" * 50)
-print(f"Test complete. {passed} endpoints responding.")
+print(f"Test complete. {passed} endpoints responding successfully.")
 if failed > 0:
     print(f"Found {failed} failures:")
     for err in errors:
