@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   Activity, TrendingUp, AlertTriangle, Users, ShieldAlert,
   Sparkles, RefreshCw, BarChart2, PieChart, ArrowUpRight,
@@ -16,9 +17,21 @@ import { useRole } from '@/context/RoleContext'
 
 import PdfReportTemplate from '@/components/ui/PdfReportTemplate'
 
-export default function AnalyticsPipelinePage() {
+function AnalyticsContent() {
+  const searchParams = useSearchParams()
   const { role, patients, prescriptions } = useRole()
-  const [activeTab, setActiveTab] = useState<'trend' | 'anomaly' | 'risk' | 'cohort'>('trend')
+  
+  // Read initial tab from URL or default to 'trend'
+  const initialTab = (searchParams.get('tab') as any) || 'trend'
+  const [activeTab, setActiveTab] = useState<'trend' | 'anomaly' | 'risk' | 'cohort'>(initialTab)
+  
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['trend', 'anomaly', 'risk', 'cohort'].includes(tab)) {
+      setActiveTab(tab as any)
+    }
+  }, [searchParams])
+
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshMessage, setRefreshMessage] = useState('')
   const [v2Analysis, setV2Analysis] = useState<any>(null)
@@ -807,5 +820,13 @@ export default function AnalyticsPipelinePage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AnalyticsPipelinePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-white">Loading Analytics...</div>}>
+      <AnalyticsContent />
+    </Suspense>
   )
 }
