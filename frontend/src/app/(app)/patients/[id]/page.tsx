@@ -278,36 +278,30 @@ export default function PatientDetailPage() {
             <div className="glass-panel p-6 space-y-6">
               <h3 className="text-sm font-bold text-white mb-4">Patient Clinical Journey & Encounters</h3>
               <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-white/[0.08]">
-                <div className="relative space-y-1">
-                  <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-indigo-500 border-2 border-[var(--bg-base)]" />
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">Prescription Issued & Vector Indexed</span>
-                    <span className="text-[var(--text-muted)] font-mono">2026-09-17</span>
-                  </div>
-                  <p className="text-xs text-[var(--text-secondary)]">
-                    Routine review for chronic disease management. Blood pressure checked and verified stable.
-                  </p>
-                </div>
-
-                <div className="relative space-y-1">
-                  <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[var(--bg-base)]" />
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">Clinical Lab Diagnostics</span>
-                    <span className="text-[var(--text-muted)] font-mono">2026-08-14</span>
-                  </div>
-                  <p className="text-xs text-[var(--text-secondary)]">
-                    HbA1c test completed: 6.9%. Serum Creatinine 0.92 mg/dL. Preserved renal clearance.
-                  </p>
-                </div>
+                {prescriptions
+                  .filter((rx) => rx.patient_id === patient.id || rx.mrn === patient.mrn)
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map((rx, idx) => (
+                    <div key={`rx-${rx.id}`} className="relative space-y-1">
+                      <div className={`absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-[var(--bg-base)] ${idx === 0 ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white">Prescription Issued: {rx.diagnosis}</span>
+                        <span className="text-[var(--text-muted)] font-mono">{rx.date}</span>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {rx.medications.length} medication(s) prescribed. {rx.risk_status === 'anomaly_flagged' ? 'Flagged for anomaly review by AI.' : 'AI Safety Guardrail Passed.'}
+                      </p>
+                    </div>
+                  ))}
 
                 <div className="relative space-y-1">
                   <div className="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-cyan-500 border-2 border-[var(--bg-base)]" />
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-white">Comprehensive Health Evaluation</span>
-                    <span className="text-[var(--text-muted)] font-mono">2026-06-10</span>
+                    <span className="text-[var(--text-muted)] font-mono">{patient.last_visit || '2026-06-10'}</span>
                   </div>
                   <p className="text-xs text-[var(--text-secondary)]">
-                    Initial intake into PTAI v3 registry with longitudinal baseline vector ingestion.
+                    Initial intake into PTAI registry with longitudinal baseline vector ingestion.
                   </p>
                 </div>
               </div>
