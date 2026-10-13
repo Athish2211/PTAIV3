@@ -64,11 +64,37 @@ ollama pull llama3.2:3b
 - **Backend API Docs**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 
 
-# Start all containers in the background
+## 🔄 Git Synchronization & Docker
+
+The project automatically synchronizes code with Git whenever Docker runs:
+
+### Option 1: Automatic Sync Inside Docker (Default)
+When you start Docker via `docker-compose up -d`:
+1. The **`auto_sync`** container starts first and **immediately pulls the latest code** from GitHub.
+2. A container healthcheck guarantees that `backend` and `worker` only start after the initial `git pull` is complete.
+3. Every 15 seconds, the container fetches new changes from GitHub and automatically commits local modifications.
+4. *(Optional)* Set `GITHUB_TOKEN=your_token` in `.env` if you want the Docker container to also automatically push commits back to GitHub.
+
+### Option 2: Launch via PowerShell Script
+To pull with your host Windows Git credentials and start Docker in one command:
+```powershell
+.\run-docker.ps1
+```
+
+### Option 3: Host Auto-Sync Background Script
+To keep committing and pushing in the background while developing on Windows:
+```powershell
+.\auto-sync.ps1
+```
+
+### 🐳 Docker Commands
+```bash
+# Start all containers in the background (with automatic git pull)
 docker-compose up -d
 
 # Stop all containers
 docker-compose down
 
-# View real-time logs
+# View real-time logs (including auto-sync)
 docker-compose logs -f
+```
