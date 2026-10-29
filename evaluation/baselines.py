@@ -48,7 +48,7 @@ User Question:
                 "model": self.model,
                 "prompt": monolithic_prompt,
                 "stream": False,
-                "options": {"temperature": 0.2, "num_predict": 256}
+                "options": {"temperature": 0.2, "num_predict": 128}
             }).encode("utf-8")
             
             req = urllib.request.Request(
