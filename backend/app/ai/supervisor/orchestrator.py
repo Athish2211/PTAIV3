@@ -382,7 +382,7 @@ MANDATORY INSTRUCTIONS:
         q_lower = query.lower()
 
         # 1. TIMELINE / CHRONOLOGICAL JOURNEY QUERY
-        if any(w in q_lower for w in ["timeline", "journey", "chronol", "history", "events", "encounters", "visits", "dates"]):
+        if any(w in q_lower for w in ["timeline", "time line", "time-line", "journey", "chronol", "history", "events", "encounters", "visits", "dates"]):
             output = f"### Longitudinal Clinical Timeline for **{p_name} ({p_mrn})**\n\n"
             output += f"**Patient Profile:** {p_age} Yrs · {p_gender} · Blood Group: **{p_blood}** · Risk Stratification: **{p_risk} Risk**\n"
             output += f"**Allergy Sensitivity:** {', '.join(p_algs) if p_algs else 'NKDA (No Known Drug Allergies)'}\n\n"
