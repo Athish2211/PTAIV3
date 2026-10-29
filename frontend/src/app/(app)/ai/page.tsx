@@ -104,22 +104,28 @@ function PatientLookupContent() {
   }
 
   useEffect(() => {
-    if (!selectedPatient && patients.length > 0) {
-      const p = patients[0]
-      setSelectedPatient(p)
-      setMessages([
-        {
-          id: `m-init-${Date.now()}`,
-          sender: 'agent',
-          text: `Hello Dr. Dinesh. I am your Clinical RAG Agent connected to the local Microsoft phi-4-mini Small Language Model and Vector Database (pgvector). 
+    if (patients.length > 0) {
+      const isCurrentValid = selectedPatient && patients.some((p) => p.id === selectedPatient.id)
+      if (!isCurrentValid) {
+        const p = patients[0]
+        setSelectedPatient(p)
+        const doctorName = currentUser?.name || 'Doctor'
+        setMessages([
+          {
+            id: `m-init-${Date.now()}`,
+            sender: 'agent',
+            text: `Hello ${doctorName}. I am your Clinical RAG Agent connected to the local Microsoft phi-4-mini Small Language Model and Vector Database (pgvector). 
 
 I have retrieved and grounded the longitudinal electronic health records for **${p.name} (${p.mrn})**${p.blood_group ? ` · Blood: ${p.blood_group}` : ''}. You can query their chronological care timeline, inspect past prescription regimens, or investigate allergy safety contraindications.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          citations: buildInitialCitations(p),
-        },
-      ])
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            citations: buildInitialCitations(p),
+          },
+        ])
+      }
+    } else {
+      setSelectedPatient(null)
     }
-  }, [patients, selectedPatient])
+  }, [patients, selectedPatient, currentUser])
 
   // Switch to selected patient and reset conversation context
   const handleSwitchPatient = (patientId: string) => {
@@ -129,11 +135,12 @@ I have retrieved and grounded the longitudinal electronic health records for **$
     setSelectedPatient(p)
     router.replace(`/ai?patientId=${p.id}`)
 
+    const doctorName = currentUser?.name || 'Doctor'
     setMessages([
       {
         id: `m-init-${Date.now()}`,
         sender: 'agent',
-        text: `Hello Dr. Dinesh. I am your Clinical RAG Agent connected to the local Microsoft phi-4-mini Small Language Model and Vector Database (pgvector).
+        text: `Hello ${doctorName}. I am your Clinical RAG Agent connected to the local Microsoft phi-4-mini Small Language Model and Vector Database (pgvector).
 
 I have loaded the longitudinal records for **${p.name} (${p.mrn})**. You can ask clinical questions, investigate past treatments for ${p.chronic_conditions?.[0] || 'their condition'}, query their timeline of care, or check contraindication warnings.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
