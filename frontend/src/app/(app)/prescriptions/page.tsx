@@ -160,17 +160,31 @@ export default function PrescriptionsListPage() {
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
               <Pill size={24} />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-white">No Prescriptions Recorded</h3>
-              <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto">
-                No active or dispensed prescriptions found. Create a prescription to generate cryptographic QR tokens and paper printouts.
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-bold text-white">
+                {role === 'doctor'
+                  ? `No Prescriptions Recorded under ${currentUser?.name || 'Doctor'}`
+                  : 'No Prescriptions Found'}
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+                {role === 'doctor'
+                  ? `Prescriptions in PTAI v3 are mapped to your attending doctor account. Generate a prescription below, or switch to the Demo Doctor account to inspect the 100 sample prescriptions.`
+                  : 'No prescriptions match the current query.'}
               </p>
             </div>
-            <div className="pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link href="/prescriptions/new" className="btn btn-primary text-xs inline-flex items-center gap-1.5">
                 <PlusCircle size={14} />
                 <span>Create New Prescription</span>
               </Link>
+              {role === 'doctor' && currentUser?.id !== 'doc-demo' && (
+                <button
+                  onClick={() => switchUser('doc-demo')}
+                  className="btn btn-secondary text-xs text-emerald-300 hover:text-white border-emerald-500/30"
+                >
+                  <span>Switch to Demo Doctor (100 Rxs)</span>
+                </button>
+              )}
             </div>
           </div>
         )}
