@@ -42,7 +42,7 @@ def call_ptai_v3_orchestrator(query: str, patient_context: Dict[str, Any] = None
     )
     
     try:
-        with urllib.request.urlopen(req, timeout=35) as resp:
+        with urllib.request.urlopen(req, timeout=48) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             latency = data.get("latency_ms", int((time.time() - start) * 1000))
             return {
