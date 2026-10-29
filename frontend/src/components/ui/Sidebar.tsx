@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, Pill, Activity, Bot, ShieldCheck,
   ChevronRight, Stethoscope, PlusCircle, Lock, Menu, X, FileText,
-  Home, Bug, AlertTriangle, Search, TrendingUp, BarChart
+  Home, Bug, AlertTriangle, Search, TrendingUp, BarChart, LogOut,
+  UserCheck, ArrowLeftRight
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const { role } = useRole()
+  const { role, currentUser, logoutUser, toggleRole } = useRole()
   const [collapsed, setCollapsed] = useState(false)
 
   const doctorNav = [
@@ -37,6 +38,16 @@ export default function Sidebar() {
   ]
 
   const navItems = role === 'doctor' ? doctorNav : adminNav
+
+  const displayName = currentUser?.name || (role === 'doctor' ? 'Dr. Dinesh Kumar' : 'Dr. Sarah Connor')
+  const displaySubtitle = currentUser?.specialization || currentUser?.department || (role === 'doctor' ? 'Attending Physician' : 'Chief Medical Officer')
+  const initials = displayName
+    .split(' ')
+    .filter((w) => !w.toLowerCase().includes('dr.'))
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'PT'
 
   return (
     <>
