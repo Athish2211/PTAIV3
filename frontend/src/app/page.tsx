@@ -2,9 +2,12 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Stethoscope, ShieldCheck, ArrowRight, Bot, Pill, Activity, Database, Cpu } from 'lucide-react'
+import { Stethoscope, ShieldCheck, ArrowRight, Bot, Cpu, UserPlus, LogIn, Sparkles, CheckCircle2 } from 'lucide-react'
+import { useRole } from '@/context/RoleContext'
 
 export default function HomePage() {
+  const { currentUser, role } = useRole()
+
   return (
     <main className="min-h-screen bg-[var(--bg-base)] text-white flex flex-col justify-between p-8 relative overflow-hidden">
       {/* Ambient background glows */}
@@ -30,13 +33,46 @@ export default function HomePage() {
             <Cpu size={13} />
             <span>Local SLM Active (Ollama)</span>
           </div>
-          <Link href="/login" className="text-xs font-medium text-[var(--text-secondary)] hover:text-white transition-colors">
-            Sign In
-          </Link>
-          <Link href="/dashboard" className="btn btn-primary text-xs py-2 px-4 shadow-lg shadow-indigo-500/25">
-            <span>Enter EHR Portal</span>
-            <ArrowRight size={14} />
-          </Link>
+
+          {currentUser ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="text-xs font-medium text-[var(--text-secondary)] hover:text-white px-2 py-1 transition-colors"
+              >
+                Switch Account
+              </Link>
+              <Link
+                href={currentUser.role === 'doctor' ? '/dashboard' : '/analytics'}
+                className="btn btn-primary text-xs py-2 px-4 shadow-lg shadow-indigo-500/25 flex items-center gap-2"
+              >
+                <span>Enter Portal ({currentUser.name.split(' ')[0]})</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login?mode=signin"
+                className="text-xs font-medium text-[var(--text-secondary)] hover:text-white px-2 py-1 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/login?mode=signup"
+                className="hidden sm:inline-flex text-xs font-medium text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors"
+              >
+                Register
+              </Link>
+              <Link
+                href="/login"
+                className="btn btn-primary text-xs py-2 px-4 shadow-lg shadow-indigo-500/25"
+              >
+                <span>Enter EHR Gateway</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
@@ -55,48 +91,100 @@ export default function HomePage() {
         </h1>
 
         <p className="text-sm sm:text-base text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
-          Zero-trust clinical care with local SLMs, automated patient auto-match, live Anomaly & Risk Agent checks, hospital-grade paper printing, and secure data handling.
+          Zero-trust clinical care with local SLMs, automated patient auto-match, live Anomaly & Risk Agent checks, hospital-grade paper printing, and multi-doctor patient ownership.
         </p>
 
         {/* Dual Track Entry Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left max-w-2xl mx-auto pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left max-w-3xl mx-auto pt-6">
+          
           {/* Track 1: Doctor */}
-          <Link
-            href="/dashboard"
-            className="glass-panel p-6 border-emerald-500/30 hover:border-emerald-500 hover:shadow-emerald-500/10 hover:shadow-2xl transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Stethoscope size={20} />
+          <div className="glass-panel p-6 border-emerald-500/30 hover:border-emerald-500/60 hover:shadow-emerald-500/10 hover:shadow-2xl transition-all group flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Stethoscope size={20} />
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono uppercase">
+                  Doctor Roster
+                </span>
+              </div>
+
+              <div className="text-[10px] uppercase font-bold text-emerald-400 mb-1">Clinical Portal</div>
+              <h3 className="text-base font-bold text-white mb-1.5">Doctor Workstation</h3>
+              <p className="text-xs text-[var(--text-secondary)] leading-normal mb-5">
+                Access Patient Lookup (AI RAG), Generate Prescriptions with live auto-match, and print physical Rx sheets. Each doctor has their own isolated patient registry (Demo Doctor holds the 100 seed patients).
+              </p>
             </div>
-            <div className="text-[10px] uppercase font-bold text-emerald-400 mb-1">Clinical Portal</div>
-            <h3 className="text-base font-bold text-white mb-1.5">Doctor Workstation</h3>
-            <p className="text-xs text-[var(--text-secondary)] leading-normal mb-4">
-              Access Patient Lookup (AI RAG), Generate Prescriptions with live auto-match, and print physical Rx sheets.
-            </p>
-            <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-              <span>Enter as Physician</span>
-              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+
+            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <Link
+                href="/login?portal=doctor&mode=signin"
+                className="w-full py-2.5 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/50 text-xs font-bold flex items-center justify-between transition-all"
+              >
+                <span className="flex items-center gap-1.5">
+                  <LogIn size={13} />
+                  <span>Doctor Sign In</span>
+                </span>
+                <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+
+              <Link
+                href="/login?portal=doctor&mode=signup"
+                className="w-full py-2 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white text-xs font-semibold flex items-center justify-between transition-all"
+              >
+                <span className="flex items-center gap-1.5">
+                  <UserPlus size={13} className="text-emerald-400" />
+                  <span>Register New Doctor Account</span>
+                </span>
+                <span className="text-[10px] text-[var(--text-muted)]">Sign Up &rarr;</span>
+              </Link>
             </div>
-          </Link>
+          </div>
 
           {/* Track 2: Admin / CMO */}
-          <Link
-            href="/analytics"
-            className="glass-panel p-6 border-cyan-500/30 hover:border-cyan-500 hover:shadow-cyan-500/10 hover:shadow-2xl transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <ShieldCheck size={20} />
+          <div className="glass-panel p-6 border-cyan-500/30 hover:border-cyan-500/60 hover:shadow-cyan-500/10 hover:shadow-2xl transition-all group flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <ShieldCheck size={20} />
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono uppercase">
+                  CMO Console
+                </span>
+              </div>
+
+              <div className="text-[10px] uppercase font-bold text-cyan-400 mb-1">Analytics Console</div>
+              <h3 className="text-base font-bold text-white mb-1.5">Data Admin / CMO</h3>
+              <p className="text-xs text-[var(--text-secondary)] leading-normal mb-5">
+                Explore aggregated population health trends, cross-doctor anomaly alerts, polypharmacy cohorts, and hospital governance under zero-trust de-identification.
+              </p>
             </div>
-            <div className="text-[10px] uppercase font-bold text-cyan-400 mb-1">Analytics Console</div>
-            <h3 className="text-base font-bold text-white mb-1.5">Data Admin / CMO</h3>
-            <p className="text-xs text-[var(--text-secondary)] leading-normal mb-4">
-              Explore aggregated population health trends, review Anomaly & Risk agent alerts, and manage encryption settings.
-            </p>
-            <div className="text-xs font-bold text-cyan-400 flex items-center gap-1">
-              <span>Enter as Admin / CMO</span>
-              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+
+            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <Link
+                href="/login?portal=admin&mode=signin"
+                className="w-full py-2.5 px-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50 text-xs font-bold flex items-center justify-between transition-all"
+              >
+                <span className="flex items-center gap-1.5">
+                  <LogIn size={13} />
+                  <span>Admin / CMO Sign In</span>
+                </span>
+                <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+
+              <Link
+                href="/login?portal=admin&mode=signup"
+                className="w-full py-2 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-[var(--text-secondary)] hover:text-white text-xs font-semibold flex items-center justify-between transition-all"
+              >
+                <span className="flex items-center gap-1.5">
+                  <UserPlus size={13} className="text-cyan-400" />
+                  <span>Register New Admin Account</span>
+                </span>
+                <span className="text-[10px] text-[var(--text-muted)]">Sign Up &rarr;</span>
+              </Link>
             </div>
-          </Link>
+          </div>
+
         </div>
       </div>
 
