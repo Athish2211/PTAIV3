@@ -103,6 +103,9 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str
     role: str = "doctor" # "doctor" or "admin"
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
+    phone: Optional[str] = None
 
 @router.post("/signup", response_model=TokenResponse, summary="Register a new user")
 async def signup(
@@ -125,7 +128,10 @@ async def signup(
         last_name=payload.last_name,
         email=payload.email,
         hashed_password=hash_password(payload.password),
-        role=payload.role if payload.role in ["doctor", "admin"] else "doctor"
+        role=payload.role if payload.role in ["doctor", "admin"] else "doctor",
+        specialization=payload.specialization,
+        license_number=payload.license_number,
+        phone=payload.phone,
     )
     db.add(new_user)
     await db.commit()
