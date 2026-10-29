@@ -320,25 +320,39 @@ export default function PatientsDirectoryPage() {
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto">
               <Users size={24} />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-white">No Patients Registered</h3>
-              <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto">
-                The patient registry is currently empty. Register a patient with their blood group and contact number to begin clinical tracking.
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-bold text-white">
+                {role === 'doctor'
+                  ? `No Patients Registered under ${currentUser?.name || 'Attending Physician'}`
+                  : 'No Patients Found in Selected Filter'}
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+                {role === 'doctor'
+                  ? `Patients in PTAI v3 are isolated per doctor account. You can register your first patient profile below, or switch back to the Demo Doctor account to access the complete 100-patient dataset.`
+                  : 'No patients found matching the selected search query or attending doctor filter.'}
               </p>
             </div>
             {role === 'doctor' && (
-              <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
                   className="btn btn-primary text-xs flex items-center gap-1.5"
                 >
                   <UserPlus size={14} />
-                  <span>Register Patient</span>
+                  <span>Register First Patient</span>
                 </button>
                 <Link href="/prescriptions/new" className="btn btn-secondary text-xs flex items-center gap-1.5">
                   <PlusCircle size={14} />
                   <span>Write Prescription</span>
                 </Link>
+                {currentUser?.id !== 'doc-demo' && (
+                  <button
+                    onClick={() => switchUser('doc-demo')}
+                    className="btn btn-secondary text-xs text-indigo-300 hover:text-white border-indigo-500/30"
+                  >
+                    <span>Switch to Demo Doctor (100 Patients)</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
