@@ -100,10 +100,13 @@ export default function PatientsDirectoryPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             {role === 'doctor' ? (
-              <span className="badge badge-emerald">Clinical Assigned Patients</span>
+              <span className="badge badge-emerald flex items-center gap-1.5">
+                <span>Clinical Assigned Patients ({patients.length})</span>
+                <span className="text-[10px] opacity-75 font-mono">· {currentUser?.name || 'Dr. Dinesh Kumar'}</span>
+              </span>
             ) : (
               <span className="badge badge-cyan flex items-center gap-1">
-                <Lock size={10} /> De-Identified Cohort View
+                <Lock size={10} /> De-Identified Cohort View ({patients.length} Total Hospital Patients)
               </span>
             )}
           </div>
@@ -113,8 +116,8 @@ export default function PatientsDirectoryPage() {
           </h1>
           <p className="text-xs text-[var(--text-secondary)] mt-1">
             {role === 'doctor'
-              ? 'Browse clinical profiles, blood groups, contact info, and launch RAG lookups or prescription builders.'
-              : 'Secure longitudinal patient cohort data with redacted personal identifiable information.'}
+              ? `Browse clinical profiles for ${currentUser?.name || 'Attending Physician'}. Patient lists are isolated to each doctor account.`
+              : 'Secure longitudinal patient cohort data with redacted personal identifiable information across all attending physicians.'}
           </p>
         </div>
 
@@ -137,21 +140,42 @@ export default function PatientsDirectoryPage() {
 
       {/* Search Toolbar */}
       <div className="glass-panel p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative w-full sm:w-96">
-          <Search size={15} className="absolute left-3.5 top-3 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            className="input-field !pl-9 text-xs"
-            placeholder={
-              role === 'doctor'
-                ? "Search patient name, MRN, phone, blood group..."
-                : "Search de-identified ID (e.g. PT-ANON-0842) or condition..."
-            }
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto flex-1">
+          <div className="relative w-full sm:w-80">
+            <Search size={15} className="absolute left-3.5 top-3 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              className="input-field !pl-9 text-xs"
+              placeholder={
+                role === 'doctor'
+                  ? "Search patient name, MRN, phone, blood group..."
+                  : "Search de-identified ID or condition..."
+              }
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {/* Admin Doctor Filter Dropdown */}
+          {role === 'admin' && (
+            <div className="w-full sm:w-auto">
+              <select
+                value={selectedDoctorFilter}
+                onChange={(e) => setSelectedDoctorFilter(e.target.value)}
+                className="input-field text-xs py-2 px-3 bg-[var(--bg-surface)] text-white border-[var(--border-subtle)] rounded-xl"
+              >
+                <option value="all">All Doctors (System-wide)</option>
+                {allDoctors.map((doc) => (
+                  <option key={doc.id} value={doc.id}>
+                    {doc.name} ({doc.patientCount} patients)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
-        <div className="text-xs text-[var(--text-muted)]">
+
+        <div className="text-xs text-[var(--text-muted)] whitespace-nowrap">
           {filtered.length} Record{filtered.length === 1 ? '' : 's'} displayed
         </div>
       </div>
