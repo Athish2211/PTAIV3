@@ -13,7 +13,10 @@ from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 
-from tools.base_tool import BaseMLTool
+try:
+    from tools.base_tool import BaseMLTool
+except (ImportError, ModuleNotFoundError):
+    from app.tools.base_tool import BaseMLTool
 
 
 class CohortTool(BaseMLTool):

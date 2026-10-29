@@ -10,7 +10,10 @@ import pandas as pd
 from typing import Dict, Any, List
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
-from tools.base_tool import BaseMLTool
+try:
+    from tools.base_tool import BaseMLTool
+except (ImportError, ModuleNotFoundError):
+    from app.tools.base_tool import BaseMLTool
 
 
 class TrendTool(BaseMLTool):
