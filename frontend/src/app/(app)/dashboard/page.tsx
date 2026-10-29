@@ -14,7 +14,7 @@ import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescription
 import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis } from 'recharts'
 
 export default function DashboardPage() {
-  const { role, patients, prescriptions, clearAllData } = useRole()
+  const { role, patients, prescriptions, clearAllData, currentUser } = useRole()
   const [currentTime, setCurrentTime] = useState<string>('')
   const [selectedRxForPrint, setSelectedRxForPrint] = useState<PrescriptionRecord | null>(null)
   const [resetNotice, setResetNotice] = useState<string>('')
@@ -80,12 +80,14 @@ export default function DashboardPage() {
             <span className="text-xs text-[var(--text-muted)] font-mono">{currentTime}</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            {role === 'doctor' ? 'Clinical Command Hub' : 'Medical Administration Overview'}
+            {role === 'doctor'
+              ? `Welcome, ${currentUser?.name || 'Dr. Dinesh Kumar'}`
+              : `Welcome, ${currentUser?.name || 'Dr. Sarah Connor'}`}
           </h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
             {role === 'doctor'
-              ? 'Select a clinical action to begin patient consultation, prescription creation, or data review.'
-              : 'Drillable metrics from Organization → Doctor → Patient → Clinical Record.'}
+              ? `Doctor Workstation · ${currentUser?.specialization || 'Attending Physician'} · ${totalPatients} Assigned Patients`
+              : 'Medical Administration Overview · Hospital-wide Population Health Telemetry'}
           </p>
         </div>
 
