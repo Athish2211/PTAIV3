@@ -16,7 +16,10 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 import xgboost as xgb
 
-from tools.base_tool import BaseMLTool
+try:
+    from tools.base_tool import BaseMLTool
+except (ImportError, ModuleNotFoundError):
+    from app.tools.base_tool import BaseMLTool
 
 
 class RiskTool(BaseMLTool):

@@ -11,7 +11,10 @@ from typing import Dict, Any, List
 from collections import Counter
 from itertools import combinations
 
-from tools.base_tool import BaseMLTool
+try:
+    from tools.base_tool import BaseMLTool
+except (ImportError, ModuleNotFoundError):
+    from app.tools.base_tool import BaseMLTool
 
 
 class PatternTool(BaseMLTool):
