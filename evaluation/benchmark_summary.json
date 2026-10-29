@@ -1,0 +1,194 @@
+{
+  "evaluation_timestamp": "2026-10-29 17:28:48",
+  "total_scenarios_evaluated": 30,
+  "overall_performance": {
+    "ptai_v3": {
+      "passed_count": 16,
+      "total_count": 30,
+      "success_rate_pct": 53.3,
+      "latency_median_ms": 23912.0,
+      "latency_mean_ms": 22157.0,
+      "latency_p90_ms": 33064.5,
+      "latency_p95_ms": 41663.2,
+      "latency_min_ms": 0.0,
+      "latency_max_ms": 48011.0
+    },
+    "baseline_1_single_agent": {
+      "passed_count": 9,
+      "total_count": 30,
+      "success_rate_pct": 30.0,
+      "latency_median_ms": 10955.0,
+      "latency_mean_ms": 9582.9,
+      "latency_p90_ms": 12027.1,
+      "latency_p95_ms": 12029.6,
+      "latency_min_ms": 4003.0,
+      "latency_max_ms": 12032.0
+    },
+    "baseline_2_heuristic": {
+      "passed_count": 4,
+      "total_count": 30,
+      "success_rate_pct": 13.3,
+      "latency_median_ms": 0.0,
+      "latency_mean_ms": 0.0,
+      "latency_p90_ms": 0.0,
+      "latency_p95_ms": 0.0,
+      "latency_min_ms": 0.0,
+      "latency_max_ms": 1.0
+    }
+  },
+  "category_breakdown": {
+    "Normal Clinical": {
+      "total": 6,
+      "ptai_pass": 4,
+      "single_pass": 2,
+      "heuristic_pass": 1
+    },
+    "Safety & Contraindications": {
+      "total": 5,
+      "ptai_pass": 0,
+      "single_pass": 0,
+      "heuristic_pass": 0
+    },
+    "Adversarial & Injection": {
+      "total": 5,
+      "ptai_pass": 5,
+      "single_pass": 0,
+      "heuristic_pass": 0
+    },
+    "Incomplete Data": {
+      "total": 5,
+      "ptai_pass": 3,
+      "single_pass": 1,
+      "heuristic_pass": 1
+    },
+    "Malformed Inputs": {
+      "total": 4,
+      "ptai_pass": 3,
+      "single_pass": 2,
+      "heuristic_pass": 2
+    },
+    "Complex Longitudinal": {
+      "total": 5,
+      "ptai_pass": 1,
+      "single_pass": 4,
+      "heuristic_pass": 0
+    }
+  },
+  "ml_benchmarks": {
+    "timestamp": "2026-10-29 17:28:48",
+    "forecasting": {
+      "dataset": "24-Month Synthetic EHR Prescription Volume (Held-Out Test N=6 months)",
+      "test_actuals": [
+        146.06,
+        139.98,
+        149.3,
+        146.98,
+        155.49,
+        160.01
+      ],
+      "ptai_v3_forecaster": {
+        "model_selected": "ExponentialSmoothing (Holt-Winters)",
+        "predictions": [
+          155.61,
+          154.81,
+          154.01,
+          153.21,
+          152.41,
+          151.62
+        ],
+        "rmse": 8.68,
+        "mae": 7.8,
+        "mape_pct": 5.29
+      },
+      "baseline_naive_last": {
+        "model": "Naive Last-Observed Value",
+        "predictions": [
+          156.4,
+          156.4,
+          156.4,
+          156.4,
+          156.4,
+          156.4
+        ],
+        "rmse": 9.4,
+        "mae": 7.97,
+        "mape_pct": 5.47
+      },
+      "baseline_naive_mean": {
+        "model": "Naive Historical Mean",
+        "predictions": [
+          139.43,
+          139.43,
+          139.43,
+          139.43,
+          139.43,
+          139.43
+        ],
+        "rmse": 12.11,
+        "mae": 10.2,
+        "mape_pct": 6.64
+      },
+      "rmse_improvement_vs_naive_last_pct": 7.6,
+      "rmse_improvement_vs_naive_mean_pct": 28.3
+    },
+    "anomaly_detection": {
+      "dataset": "200 Prescribing Records (188 inliers, 12 verified anomalies, contamination=6.0%)",
+      "ptai_v3_tournament": {
+        "selected_model": "LocalOutlierFactor",
+        "separation_score_std": 4.16,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "accuracy": 1.0,
+        "candidates_evaluated": [
+          {
+            "model": "IsolationForest",
+            "separation_std": 3.5,
+            "f1": 1.0
+          },
+          {
+            "model": "LocalOutlierFactor",
+            "separation_std": 4.16,
+            "f1": 1.0
+          },
+          {
+            "model": "OneClassSVM",
+            "separation_std": 2.48,
+            "f1": 0.583
+          }
+        ]
+      },
+      "baseline_statistical_iqr": {
+        "model": "Static IQR / Z-Score Envelope (Threshold z > 2.8)",
+        "separation_score_std": 3.75,
+        "precision": 1.0,
+        "recall": 0.917,
+        "f1_score": 0.957,
+        "accuracy": 0.995
+      },
+      "f1_gain_pct": 4.5,
+      "separation_gain_std": 0.41
+    },
+    "risk_stratification": {
+      "dataset": "100 Synthetic Patient Profiles (Held-Out Test N=20 patients, 80/20 stratified split)",
+      "ptai_v3_ensemble": {
+        "model": "Gradient Boosting Classifier (Ensemble)",
+        "accuracy": 0.7,
+        "precision": 0.5,
+        "recall": 0.667,
+        "f1_score": 0.571,
+        "roc_auc": 0.833
+      },
+      "baseline_logistic_regression": {
+        "model": "Standard Logistic Regression",
+        "accuracy": 0.95,
+        "precision": 0.857,
+        "recall": 1.0,
+        "f1_score": 0.923,
+        "roc_auc": 1.0
+      },
+      "f1_improvement_pct": -38.1,
+      "roc_auc_gain": -0.167
+    }
+  }
+}
