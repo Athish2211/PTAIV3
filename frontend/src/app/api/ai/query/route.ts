@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
           patient: body.patient,
           conversation_id: "web-client",
         }),
-        signal: AbortSignal.timeout(40000)
+        signal: AbortSignal.timeout(65000)
       })
 
       if (response.ok) {
