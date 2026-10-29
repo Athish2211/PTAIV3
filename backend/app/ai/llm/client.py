@@ -21,16 +21,18 @@ class OllamaClient:
         if self.explicit_base_url:
             targets.append((self.explicit_base_url, self.model))
         
-        # 1. Primary: Host Windows Ollama with phi4-mini:latest
-        targets.append(("http://host.docker.internal:11434", self.model))
-        # 2. Container Ollama with phi4-mini:latest (if pulled)
-        targets.append(("http://ollama:11434", self.model))
-        # 3. Container Ollama with medgemma:latest
-        targets.append(("http://ollama:11434", "medgemma:latest"))
-        
-        env_url = os.getenv("OLLAMA_BASE_URL")
+        env_url = os.getenv("OLLAMA_BASE_URL") or getattr(settings, "OLLAMA_BASE_URL", None)
         if env_url:
             targets.append((env_url, self.model))
+            targets.append((env_url, "medgemma:latest"))
+
+        # Container Ollama
+        targets.append(("http://ollama:11434", self.model))
+        targets.append(("http://ollama:11434", "medgemma:latest"))
+
+        # Host Windows Ollama with phi4-mini:latest
+        targets.append(("http://host.docker.internal:11434", self.model))
+        targets.append(("http://localhost:11434", self.model))
 
         # Deduplicate preserving order
         seen = set()
