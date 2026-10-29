@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     let fallbackResponse = ''
 
-    if (qLower.includes('timeline') || qLower.includes('journey') || qLower.includes('history') || qLower.includes('events')) {
+    if (qLower.includes('timeline') || qLower.includes('time line') || qLower.includes('time-line') || qLower.includes('journey') || qLower.includes('history') || qLower.includes('events') || qLower.includes('encounters')) {
       fallbackResponse = `### Longitudinal Clinical Timeline for **${p.name || 'Patient'} (${p.mrn || 'EHR'})**\n\n`
       fallbackResponse += `**Demographics:** ${p.age || 28} Yrs · ${p.gender || 'Patient'} · Blood: **${p.blood_group || 'O+'}** · Risk: **${p.risk_level || 'Low'} Risk**\n`
       fallbackResponse += `**Allergies:** ${allergiesList.join(', ') || 'NKDA (No Known Drug Allergies)'}\n\n`
