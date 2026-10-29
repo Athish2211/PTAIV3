@@ -303,7 +303,7 @@ MANDATORY INSTRUCTIONS:
                 prompt=query,
                 system=clinical_system_prompt,
                 temperature=0.2,
-                timeout=45.0
+                timeout=18.0
             )
             if slm_response and len(slm_response.strip()) > 30 and "no longitudinal data" not in slm_response.lower() and "cannot provide" not in slm_response.lower():
                 final_response = slm_response.strip()
