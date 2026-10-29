@@ -1,10 +1,10 @@
 """
-Sync the 100 Seed Patients & Prescriptions from seedData.ts into PostgreSQL with pgvector embeddings.
-Ensures both frontend and backend are 100% synchronized with identical records.
+Sync the 100 Seed Patients & Prescriptions directly into PostgreSQL with pgvector embeddings.
+Ensures both frontend (seedData.ts) and backend PostgreSQL are 100% synchronized with identical records.
 """
 import asyncio
 import json
-import re
+import random
 import uuid
 from datetime import date, datetime, timezone, timedelta
 from sqlalchemy import text, select
@@ -16,46 +16,170 @@ from app.models import (
 )
 from app.ai.llm.embeddings import embedding_client
 
+first_names_m = [
+    'Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan',
+    'Shaurya', 'Atharv', 'Advik', 'Pranav', 'Advaith', 'Aaryan', 'Dhruv', 'Kabir', 'Rudra', 'Rohan',
+    'Vikram', 'Rajesh', 'Suresh', 'Ramesh', 'Amit', 'Anil', 'Sunil', 'Vijay', 'Manoj', 'Deepak',
+    'Sanjay', 'Rahul', 'Naveen', 'Kiran', 'Prakash', 'Mahesh', 'Dinesh', 'Girish', 'Naresh', 'Harish',
+    'Ashok', 'Vinod', 'Pramod', 'Santosh', 'Rakesh', 'Mukesh', 'Rajendra', 'Gopal', 'Madhav', 'Keshav'
+]
+first_names_f = [
+    'Saanvi', 'Aanya', 'Aadhya', 'Aaradhya', 'Ananya', 'Pari', 'Anika', 'Navya', 'Diya', 'Avani',
+    'Myra', 'Sara', 'Ira', 'Riya', 'Shruti', 'Pooja', 'Neha', 'Sneha', 'Priya', 'Kavita',
+    'Sunita', 'Anita', 'Geeta', 'Sita', 'Radha', 'Meera', 'Laxmi', 'Swati', 'Divya', 'Deepa',
+    'Shilpa', 'Rekha', 'Manju', 'Usha', 'Asha', 'Shobha', 'Jyoti', 'Kiran', 'Preeti', 'Sandhya',
+    'Sarita', 'Sushma', 'Vandana', 'Anjali', 'Archana', 'Bhavna', 'Chetna', 'Dolly', 'Ekta', 'Farida'
+]
+last_names = [
+    'Sharma', 'Verma', 'Patel', 'Reddy', 'Rao', 'Nair', 'Menon', 'Pillai', 'Iyer', 'Iyengar',
+    'Gupta', 'Agarwal', 'Jain', 'Bansal', 'Mittal', 'Singhal', 'Goyal', 'Mehta', 'Shah', 'Desai',
+    'Joshi', 'Kulkarni', 'Deshpande', 'Patil', 'Pawar', 'Chavan', 'Shinde', 'Gaekwad', 'Bose', 'Chatterjee',
+    'Banerjee', 'Mukherjee', 'Dutta', 'Ghosh', 'Sen', 'Das', 'Roy', 'Singh', 'Kaur', 'Kumar',
+    'Choudhary', 'Yadav', 'Mishra', 'Pandey', 'Tiwari', 'Dubey', 'Shukla', 'Tripathi', 'Upadhyay', 'Pathak'
+]
+
+blood_groups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+
+allergy_pool_low = ['NKDA (No Known Drug Allergies)']
+allergy_pool_mod = ['Pollen', 'Dust mites', 'Sulfa drugs (Mild rash)', 'Ibuprofen (Mild GI distress)', 'Lactose sensitivity']
+allergy_pool_high = [
+    'Penicillin (Anaphylaxis risk)', 'Amoxicillin (Severe angioedema)', 'Cephalosporins (Cross-reactive)',
+    'Aspirin (Bronchospasm)', 'Morphine (Severe respiratory depression)', 'Codeine'
+]
+
+med_pool_cardio = [
+    ('Amlodipine', '5mg', '1-0-0 OD'),
+    ('Telmisartan', '40mg', '1-0-0 OD'),
+    ('Metoprolol', '50mg', '1-0-1 BD'),
+    ('Atorvastatin', '20mg', '0-0-1 QHS'),
+    ('Ramipril', '5mg', '1-0-0 OD')
+]
+med_pool_diab = [
+    ('Metformin', '500mg', '1-0-1 BD'),
+    ('Glimepiride', '2mg', '1-0-0 OD'),
+    ('Dapagliflozin', '10mg', '1-0-0 OD'),
+    ('Sitagliptin', '100mg', '1-0-0 OD'),
+    ('Vildagliptin', '50mg', '1-0-1 BD')
+]
+med_pool_other = [
+    ('Pantoprazole', '40mg', '1-0-0 Before Food'),
+    ('Cetirizine', '10mg', '0-0-1 QHS'),
+    ('Montelukast', '10mg', '0-0-1 QHS'),
+    ('Levothyroxine', '50mcg', '1-0-0 Fasting'),
+    ('Paracetamol', '650mg', 'SOS (As needed)')
+]
+
+def generate_100():
+    random.seed(42)
+    patients = []
+    prescriptions = []
+
+    for i in range(1, 101):
+        gender = 'Male' if random.random() > 0.48 else 'Female'
+        first_name = random.choice(first_names_m) if gender == 'Male' else random.choice(first_names_f)
+        last_name = random.choice(last_names)
+        full_name = f"{first_name} {last_name}"
+        mrn = f"MRN-2026-{1000 + i}"
+        patient_id = f"p-{1000 + i}"
+        blood_group = random.choice(blood_groups)
+        phone = f"+91 9{random.randint(100000000, 999999999)}"
+
+        if i <= 45:
+            risk_level = 'Low'
+            age = random.randint(19, 45)
+            cond_count = random.choice([0, 1, 1])
+            conds = random.sample(['General Wellness', 'Seasonal Flu', 'Mild Gastritis', 'Allergic Rhinitis', 'Myalgia', 'Mild Vitamin D Deficiency'], cond_count) if cond_count > 0 else ['General Outpatient']
+            algs = [random.choice(allergy_pool_low)]
+            active_meds = random.sample(['Multivitamin', 'Vitamin D3 60k', 'Paracetamol 500mg', 'Antacid Syrup'], random.choice([0, 1]))
+            notes = 'Routine outpatient consultation. Vitals within baseline limits. Low clinical complexity.'
+            rx_risk_status = 'normal'
+        elif i <= 80:
+            risk_level = 'Moderate'
+            age = random.randint(42, 65)
+            cond_count = random.randint(2, 3)
+            conds = random.sample(['Essential Hypertension', 'Type 2 Diabetes Mellitus', 'Hyperlipidemia', 'GERD', 'Hypothyroidism', 'Osteoarthritis'], cond_count)
+            algs = [random.choice(allergy_pool_mod)] if random.random() > 0.4 else ['NKDA (No Known Drug Allergies)']
+            chosen_meds = random.sample(med_pool_cardio + med_pool_diab + med_pool_other, random.randint(2, 3))
+            active_meds = [m[0] for m in chosen_meds]
+            notes = f"Moderate risk chronic disease profile for {conds[0]}. Regular 6-month lab follow-up indicated."
+            rx_risk_status = 'normal'
+        else:
+            risk_level = 'High'
+            age = random.randint(58, 86)
+            cond_count = random.randint(4, 6)
+            conds = random.sample(['Coronary Artery Disease', 'Type 2 Diabetes Mellitus', 'Essential Hypertension', 'Chronic Kidney Disease (Stage 3)', 'Atrial Fibrillation', 'COPD', 'Heart Failure (NYHA II)'], cond_count)
+            algs = [random.choice(allergy_pool_high)]
+            chosen_meds = random.sample(med_pool_cardio + med_pool_diab + med_pool_other, random.randint(4, 5))
+            active_meds = [m[0] for m in chosen_meds]
+            notes = f"High-risk complex care profile with multi-morbid {conds[0]} and {conds[1]}. Documented allergy flag: {algs[0]}."
+            rx_risk_status = 'anomaly_flagged' if ('Penicillin' in algs[0] or 'Amoxicillin' in algs[0]) else 'normal'
+
+        p_dict = {
+            'id': patient_id,
+            'mrn': mrn,
+            'first_name': first_name,
+            'last_name': last_name,
+            'name': full_name,
+            'deidentified_id': f"PT-{mrn[-4:]}",
+            'age': age,
+            'gender': gender,
+            'blood_group': blood_group,
+            'phone': phone,
+            'allergies': algs,
+            'chronic_conditions': conds,
+            'active_medications': active_meds,
+            'risk_level': risk_level,
+            'notes': notes,
+            'diagnosis': conds[0] if conds else 'General Consultation'
+        }
+        patients.append(p_dict)
+
+        for rx_idx in range(random.randint(1, 2)):
+            rx_id = f"rx-{10000 + i*10 + rx_idx}"
+            med_rows = []
+            if active_meds:
+                for med_name in active_meds:
+                    med_rows.append({
+                        'medication': med_name,
+                        'dosage': '500mg' if 'Metformin' in med_name or 'Paracetamol' in med_name else '5mg',
+                        'frequency': '1-0-1 after food',
+                        'duration_days': 30 if risk_level != 'Low' else 7,
+                        'instructions': 'Take with water after meals.'
+                    })
+            else:
+                med_rows.append({
+                    'medication': 'Multivitamin Therapeutic',
+                    'dosage': '1 Cap',
+                    'frequency': '1-0-0 after food',
+                    'duration_days': 15,
+                    'instructions': 'Take in the morning.'
+                })
+
+            prescriptions.append({
+                'id': rx_id,
+                'patient_id': patient_id,
+                'patient_name': full_name,
+                'mrn': mrn,
+                'age': age,
+                'gender': gender,
+                'date': f"2026-09-{random.randint(1, 18):02d}",
+                'diagnosis': conds[0] if conds else 'General Health Review',
+                'medications': med_rows,
+                'status': 'active',
+                'risk_status': rx_risk_status
+            })
+
+    return patients, prescriptions
+
 async def sync_data():
-    print("🔄 Starting database sync from seedData.ts...")
+    print("🔄 Starting database sync for 100 PTAI v3 patients...")
     await init_db()
 
-    # Read frontend seedData.ts
-    seed_file_path = "/app/../frontend/src/data/seedData.ts"
-    try:
-        with open(seed_file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    except Exception:
-        # Fallback path if running outside docker or with relative path
-        import os
-        possible_paths = [
-            "c:/Users/Dinesh/OneDrive/Desktop/PTAIV3_final/PTAIV3_final/frontend/src/data/seedData.ts",
-            "/frontend/src/data/seedData.ts",
-            "../frontend/src/data/seedData.ts"
-        ]
-        content = None
-        for p in possible_paths:
-            if os.path.exists(p):
-                with open(p, "r", encoding="utf-8") as f:
-                    content = f.read()
-                break
-        if not content:
-            raise FileNotFoundError("Could not find seedData.ts")
-
-    # Extract SEED_PATIENTS_100
-    p_match = re.search(r'export const SEED_PATIENTS_100:\s*PatientSeed\[\]\s*=\s*(\[[\s\S]*?\]);', content)
-    rx_match = re.search(r'export const SEED_PRESCRIPTIONS_100:\s*PrescriptionSeed\[\]\s*=\s*(\[[\s\S]*?\]);', content)
-
-    if not p_match or not rx_match:
-        raise ValueError("Could not parse SEED_PATIENTS_100 or SEED_PRESCRIPTIONS_100 from seedData.ts")
-
-    patients_data = json.loads(p_match.group(1))
-    prescriptions_data = json.loads(rx_match.group(1))
-
-    print(f"✓ Parsed {len(patients_data)} patients and {len(prescriptions_data)} prescriptions from seedData.ts")
+    patients_data, prescriptions_data = generate_100()
+    print(f"✓ Generated {len(patients_data)} patients and {len(prescriptions_data)} prescriptions")
 
     async with AsyncSessionLocal() as db:
-        # Ensure organization
+        # Organization
         res = await db.execute(select(Organization).where(Organization.slug == "apollo-demo"))
         org = res.scalar_one_or_none()
         if not org:
@@ -69,7 +193,7 @@ async def sync_data():
             db.add(org)
             await db.flush()
 
-        # Ensure doctor
+        # Doctor
         res = await db.execute(select(User).where(User.email == "doctor@apollo-demo.ptai.dev"))
         doctor = res.scalar_one_or_none()
         if not doctor:
@@ -87,36 +211,29 @@ async def sync_data():
             db.add(doctor)
             await db.flush()
 
-        # Clean existing test data safely
+        # Clean old test data
         await db.execute(text("TRUNCATE TABLE document_chunks, documents, clinical_notes, prescription_items, prescriptions, encounters, patient_identifiers, patients CASCADE"))
         await db.commit()
-
-        print("✓ Truncated old patient tables for clean sync")
+        print("✓ Truncated tables for fresh sync")
 
         mrn_to_patient_id = {}
 
-        # 1. Insert Patients
+        # Insert Patients
         for p in patients_data:
-            name_parts = p["name"].split(" ", 1)
-            first_name = name_parts[0]
-            last_name = name_parts[1] if len(name_parts) > 1 else ""
-
-            # Calculate approximate DOB from age
             approx_dob = date(2026 - int(p["age"]), 5, 15)
-
             patient = Patient(
                 organization_id=org.id,
                 primary_doctor_id=doctor.id,
                 mrn=p["mrn"],
-                first_name=first_name,
-                last_name=last_name,
+                first_name=p["first_name"],
+                last_name=p["last_name"],
                 date_of_birth=approx_dob,
-                gender=p.get("gender", "Male").lower(),
-                phone=p.get("phone", "+91 9999999999"),
-                email=f"{first_name.lower()}.{last_name.lower()}@patient.ptai.dev".replace(" ", ""),
-                blood_group=p.get("blood_group", "O+"),
-                known_allergies=json.dumps(p.get("allergies", ["NKDA"])),
-                notes=p.get("notes", "Routine consultation. Baseline vitals recorded within normal limits."),
+                gender=p["gender"].lower(),
+                phone=p["phone"],
+                email=f"{p['first_name'].lower()}.{p['last_name'].lower()}@patient.ptai.dev",
+                blood_group=p["blood_group"],
+                known_allergies=json.dumps(p["allergies"]),
+                notes=p["notes"],
                 is_active=True,
             )
             db.add(patient)
@@ -124,17 +241,16 @@ async def sync_data():
             mrn_to_patient_id[p["mrn"]] = patient.id
             mrn_to_patient_id[p["id"]] = patient.id
 
-            # Create baseline Encounter & Clinical Note
-            enc_date = date(2026, 6, 10)
+            # Baseline Encounter
             encounter = Encounter(
                 organization_id=org.id,
                 patient_id=patient.id,
                 doctor_id=doctor.id,
-                encounter_date=enc_date,
+                encounter_date=date(2026, 6, 10),
                 encounter_type="outpatient",
-                chief_complaint=p.get("diagnosis", "General consultation"),
-                assessment=f"Evaluated for {p.get('diagnosis', 'general wellness')}. Risk level: {p.get('risk_level', 'Low')}.",
-                plan=f"Active medications: {', '.join(p.get('active_medications', [])) or 'None'}. Review in routine follow-up.",
+                chief_complaint=p["diagnosis"],
+                assessment=f"Evaluated for {p['diagnosis']}. Clinical risk: {p['risk_level']}.",
+                plan=f"Active medications: {', '.join(p['active_medications']) or 'None'}. Routine outpatient follow-up.",
                 status="completed"
             )
             db.add(encounter)
@@ -146,13 +262,13 @@ async def sync_data():
                 encounter_id=encounter.id,
                 author_id=doctor.id,
                 note_type="progress",
-                content=f"Baseline Clinical Record for {p['name']} ({p['mrn']}). Allergies: {', '.join(p.get('allergies', ['NKDA']))}. Conditions: {', '.join(p.get('chronic_conditions', ['None']))}. Notes: {p.get('notes', '')}",
+                content=f"Baseline Clinical Record for {p['name']} ({p['mrn']}). Allergies: {', '.join(p['allergies'])}. Chronic Conditions: {', '.join(p['chronic_conditions'])}. Active Meds: {', '.join(p['active_medications']) or 'None'}. Notes: {p['notes']}",
                 is_finalized=True,
             )
             db.add(note)
 
-            # Ingest as Document & DocumentChunk with vector embedding
-            doc_text = f"Patient: {p['name']} ({p['mrn']}). Age: {p['age']}, Gender: {p['gender']}, Blood: {p['blood_group']}. Allergies: {', '.join(p.get('allergies', ['NKDA']))}. Conditions: {', '.join(p.get('chronic_conditions', []))}. Regimens: {', '.join(p.get('active_medications', []))}. Historical note: {p.get('notes', '')}"
+            # RAG Document & Chunk
+            doc_text = f"Patient: {p['name']} ({p['mrn']}). Age: {p['age']}, Gender: {p['gender']}, Blood: {p['blood_group']}. Allergies: {', '.join(p['allergies'])}. Chronic Conditions: {', '.join(p['chronic_conditions'])}. Regimens: {', '.join(p['active_medications']) or 'None'}. Clinical Notes: {p['notes']}"
             doc = Document(
                 organization_id=org.id,
                 patient_id=patient.id,
@@ -169,7 +285,6 @@ async def sync_data():
             db.add(doc)
             await db.flush()
 
-            # Generate embedding
             try:
                 emb = await embedding_client.get_embedding(doc_text)
             except Exception:
@@ -188,11 +303,11 @@ async def sync_data():
             db.add(chunk)
 
         await db.commit()
-        print(f"✓ Synchronized {len(patients_data)} patients with baseline encounters and vector chunks")
+        print(f"✓ Synchronized {len(patients_data)} patients into PostgreSQL")
 
-        # 2. Insert Prescriptions
+        # Insert Prescriptions
         for rx in prescriptions_data:
-            pat_uuid = mrn_to_patient_id.get(rx.get("mrn")) or mrn_to_patient_id.get(rx.get("patient_id"))
+            pat_uuid = mrn_to_patient_id.get(rx["mrn"]) or mrn_to_patient_id.get(rx["patient_id"])
             if not pat_uuid:
                 continue
 
@@ -206,7 +321,7 @@ async def sync_data():
                 rx_number=rx["id"].upper(),
                 prescription_date=rx_d,
                 status="finalized",
-                diagnosis_context=rx.get("diagnosis", "Clinical Consultation"),
+                diagnosis_context=rx["diagnosis"],
                 is_immutable=True,
                 finalized_at=datetime(rx_d.year, rx_d.month, rx_d.day, 10, 0, 0, tzinfo=timezone.utc),
             )
@@ -214,7 +329,7 @@ async def sync_data():
             await db.flush()
 
             med_summaries = []
-            for idx, m in enumerate(rx.get("medications", [])):
+            for idx, m in enumerate(rx["medications"]):
                 item = PrescriptionItem(
                     prescription_id=prescription.id,
                     medication_name=m["medication"],
@@ -223,14 +338,14 @@ async def sync_data():
                     frequency=m["frequency"],
                     duration=f"{m['duration_days']} days",
                     route="oral",
-                    instructions=m.get("instructions", "Take as directed"),
+                    instructions=m["instructions"],
                     sort_order=idx,
                 )
                 db.add(item)
-                med_summaries.append(f"{m['medication']} {m['dosage']} ({m['frequency']}) for {m['duration_days']} days")
+                med_summaries.append(f"{m['medication']} {m['dosage']} ({m['frequency']}) for {m['duration_days']} days. Instructions: {m['instructions']}")
 
             # Ingest prescription document chunk for RAG
-            rx_text = f"Prescription {rx['id']} for {rx['patient_name']} on {rx['date']}. Diagnosis: {rx['diagnosis']}. Medications: {'; '.join(med_summaries)}. AI Status: {rx.get('risk_status', 'normal')}."
+            rx_text = f"Prescription Record {rx['id']} for {rx['patient_name']} ({rx['mrn']}) on {rx['date']}. Diagnosis: {rx['diagnosis']}. Prescribed: {'; '.join(med_summaries)}. Status: {rx['status']}. AI Safety: {rx['risk_status']}."
             rx_doc = Document(
                 organization_id=org.id,
                 patient_id=pat_uuid,
@@ -267,7 +382,7 @@ async def sync_data():
         await db.commit()
         print(f"✓ Synchronized {len(prescriptions_data)} prescriptions with items and vector chunks")
 
-    print("\n🎉 Database sync completed successfully! Frontend and PostgreSQL are now 100% in sync.")
+    print("\n🎉 Database sync completed successfully! PostgreSQL and seedData.ts are now identical.")
 
 if __name__ == "__main__":
     asyncio.run(sync_data())
