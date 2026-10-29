@@ -49,7 +49,8 @@ class OllamaClient:
             "prompt": prompt,
             "stream": False,
             "options": {
-                "temperature": temperature
+                "temperature": temperature,
+                "num_predict": 128
             }
         }
         if system:
