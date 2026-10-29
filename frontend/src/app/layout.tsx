@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { RoleProvider } from '@/context/RoleContext'
 
 export const metadata: Metadata = {
   title: 'PTAI v3 — AI-Native EHR',
@@ -26,7 +27,9 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body>
-        {children}
+        <RoleProvider>
+          {children}
+        </RoleProvider>
       </body>
     </html>
   )
