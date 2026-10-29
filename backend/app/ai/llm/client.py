@@ -20,6 +20,9 @@ class OllamaClient:
         candidates = []
         if self.explicit_base_url:
             candidates.append(self.explicit_base_url)
+        # Prioritize host.docker.internal where the local host Ollama runs with GPU/phi4
+        candidates.append("http://host.docker.internal:11434")
+        candidates.append("http://ollama:11434")
         env_url = os.getenv("OLLAMA_BASE_URL")
         if env_url:
             candidates.append(env_url)
@@ -27,8 +30,6 @@ class OllamaClient:
         if setting_url:
             candidates.append(setting_url)
         candidates.extend([
-            "http://ollama:11434",
-            "http://host.docker.internal:11434",
             "http://127.0.0.1:11434",
             "http://localhost:11434",
         ])
@@ -41,62 +42,84 @@ class OllamaClient:
                 unique.append(u)
         return unique
 
-    async def generate(self, prompt: str, system: Optional[str] = None, json_format: bool = False, temperature: float = 0.1) -> str:
-        """Single prompt generation with automatic multi-endpoint fallback."""
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "options": {
-                "temperature": temperature
-            }
-        }
-        if system:
-            payload["system"] = system
-        if json_format:
-            payload["format"] = "json"
+    async def generate(self, prompt: str, system: Optional[str] = None, json_format: bool = False, temperature: float = 0.1, timeout: float = 45.0) -> str:
+        """Single prompt generation with automatic multi-endpoint and multi-model fallback."""
+        model_candidates = [self.model, "phi4-mini:latest", "phi4-mini", "medgemma:latest"]
+        # Deduplicate preserving order
+        seen_models = []
+        for m in model_candidates:
+            if m not in seen_models:
+                seen_models.append(m)
 
         last_error = None
         for base_url in self._get_candidate_urls():
-            url = f"{base_url}/api/generate"
-            try:
-                async with httpx.AsyncClient(timeout=120.0) as client:
-                    response = await client.post(url, json=payload)
-                    response.raise_for_status()
-                    data = response.json()
-                    return data.get("response", "")
-            except Exception as e:
-                last_error = e
-                continue
+            for model_name in seen_models:
+                url = f"{base_url}/api/generate"
+                payload = {
+                    "model": model_name,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "temperature": temperature
+                    }
+                }
+                if system:
+                    payload["system"] = system
+                if json_format:
+                    payload["format"] = "json"
+
+                try:
+                    async with httpx.AsyncClient(timeout=timeout) as client:
+                        response = await client.post(url, json=payload)
+                        if response.status_code == 404:
+                            # Model not on this endpoint, try next model or endpoint
+                            continue
+                        response.raise_for_status()
+                        data = response.json()
+                        resp_text = data.get("response", "")
+                        if resp_text and len(resp_text.strip()) > 0:
+                            return resp_text
+                except Exception as e:
+                    last_error = e
+                    continue
 
         logger.error(f"Ollama generate failed across all endpoints: {last_error}")
         raise last_error or RuntimeError("Ollama service unreachable")
 
-    async def chat(self, messages: List[Dict[str, str]], json_format: bool = False, temperature: float = 0.1) -> str:
+    async def chat(self, messages: List[Dict[str, str]], json_format: bool = False, temperature: float = 0.1, timeout: float = 45.0) -> str:
         """Multi-turn chat interaction with automatic multi-endpoint fallback."""
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": temperature
-            }
-        }
-        if json_format:
-            payload["format"] = "json"
-            
+        model_candidates = [self.model, "phi4-mini:latest", "phi4-mini", "medgemma:latest"]
+        seen_models = []
+        for m in model_candidates:
+            if m not in seen_models:
+                seen_models.append(m)
+
         last_error = None
         for base_url in self._get_candidate_urls():
-            url = f"{base_url}/api/chat"
-            try:
-                async with httpx.AsyncClient(timeout=120.0) as client:
-                    response = await client.post(url, json=payload)
-                    response.raise_for_status()
-                    data = response.json()
-                    return data.get("message", {}).get("content", "")
-            except Exception as e:
-                last_error = e
-                continue
+            for model_name in seen_models:
+                url = f"{base_url}/api/chat"
+                payload = {
+                    "model": model_name,
+                    "messages": messages,
+                    "stream": False,
+                    "options": {
+                        "temperature": temperature
+                    }
+                }
+                if json_format:
+                    payload["format"] = "json"
+                    
+                try:
+                    async with httpx.AsyncClient(timeout=timeout) as client:
+                        response = await client.post(url, json=payload)
+                        if response.status_code == 404:
+                            continue
+                        response.raise_for_status()
+                        data = response.json()
+                        return data.get("message", {}).get("content", "")
+                except Exception as e:
+                    last_error = e
+                    continue
 
         logger.error(f"Ollama chat failed across all endpoints: {last_error}")
         raise last_error or RuntimeError("Ollama service unreachable")
