@@ -223,7 +223,7 @@ async def sync_data():
             approx_dob = date(2026 - int(p["age"]), 5, 15)
             patient = Patient(
                 organization_id=org.id,
-                primary_doctor_id=doctor.id,
+                primary_doctor_id=None,
                 mrn=p["mrn"],
                 first_name=p["first_name"],
                 last_name=p["last_name"],
