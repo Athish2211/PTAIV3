@@ -7,7 +7,7 @@ import PrintPrescriptionModal from '@/components/prescriptions/PrintPrescription
 import { useRole, PrescriptionRecord } from '@/context/RoleContext'
 
 export default function PrescriptionsListPage() {
-  const { prescriptions, patients, deletePrescription } = useRole()
+  const { prescriptions, patients, deletePrescription, currentUser, role, switchUser } = useRole()
   const [search, setSearch] = useState('')
   const [selectedRxForPrint, setSelectedRxForPrint] = useState<PrescriptionRecord | null>(null)
 
