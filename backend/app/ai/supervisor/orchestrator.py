@@ -52,7 +52,7 @@ Output ONLY a JSON object with this exact structure (no markdown tags):
 
         # 1. Determine intent
         query_lower = query.lower()
-        is_patient_query = bool(patient_id or patient_context or any(w in query_lower for w in ["timeline", "patient", "history", "allergy", "allergies", "medication", "prescribe", "prescription", "condition", "diagnosis", "visit", "adherence"]))
+        is_patient_query = bool(patient_id or patient_context or any(w in query_lower for w in ["timeline", "time line", "time-line", "patient", "history", "allergy", "allergies", "medication", "prescribe", "prescription", "condition", "diagnosis", "visit", "adherence"]))
 
         routing_info = {
             "intent": "clinical_patient_lookup" if is_patient_query else "general_clinical_query",
