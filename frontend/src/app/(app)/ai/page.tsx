@@ -32,7 +32,7 @@ interface Message {
 function PatientLookupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { patients, handoffToPrescription, getPatient, prescriptions } = useRole()
+  const { patients, handoffToPrescription, getPatient, prescriptions, currentUser } = useRole()
 
   const [selectedPatient, setSelectedPatient] = useState<any>(() => patients[0] || null)
 
