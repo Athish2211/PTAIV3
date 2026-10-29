@@ -13,7 +13,10 @@ from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.svm import OneClassSVM
 
-from tools.base_tool import BaseMLTool
+try:
+    from tools.base_tool import BaseMLTool
+except (ImportError, ModuleNotFoundError):
+    from app.tools.base_tool import BaseMLTool
 
 
 class AnomalyTool(BaseMLTool):
