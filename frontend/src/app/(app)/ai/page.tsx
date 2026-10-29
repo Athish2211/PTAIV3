@@ -413,6 +413,17 @@ I have loaded the longitudinal records for **${p.name} (${p.mrn})**. You can ask
         <button
           onClick={() =>
             handleSendQuery(
+              `Give me the chronological timeline and encounter history of this patient.`
+            )
+          }
+          className="px-3 py-1.5 rounded-full bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 hover:text-white border border-indigo-500/30 font-semibold transition-all flex items-center gap-1"
+        >
+          <Clock size={12} />
+          <span>Care Timeline & Encounters</span>
+        </button>
+        <button
+          onClick={() =>
+            handleSendQuery(
               `Summarize clinical history and past therapy responses for ${selectedPatient?.chronic_conditions?.[0] || 'active conditions'}.`
             )
           }
