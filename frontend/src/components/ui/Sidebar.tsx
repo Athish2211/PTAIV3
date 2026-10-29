@@ -148,11 +148,11 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* User Footer Profile */}
-      <div className="p-3 border-t border-[var(--border-subtle)]">
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.03]">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center font-bold text-xs text-white flex-shrink-0">
-            {role === 'doctor' ? 'DU' : 'AD'}
+      {/* User Footer Profile & Logout */}
+      <div className="p-3 border-t border-[var(--border-subtle)] space-y-2">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03]">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-emerald-400 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-sm">
+            {initials}
           </div>
           <AnimatePresence>
             {!collapsed && (
@@ -160,17 +160,26 @@ export default function Sidebar() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="truncate flex-1"
+                className="truncate flex-1 min-w-0"
               >
                 <div className="text-xs font-semibold text-white truncate">
-                  {role === 'doctor' ? 'Dr. Dinesh Kumar' : 'Admin / CMO'}
+                  {displayName}
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] truncate">
-                  {role === 'doctor' ? 'Attending Physician' : 'Population Analytics'}
+                  {displaySubtitle}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+          {!collapsed && (
+            <button
+              onClick={logoutUser}
+              className="text-[var(--text-muted)] hover:text-rose-400 p-1 transition-colors flex-shrink-0"
+              title="Sign Out"
+            >
+              <LogOut size={14} />
+            </button>
+          )}
         </div>
       </div>
     </motion.aside>
