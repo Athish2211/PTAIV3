@@ -4,12 +4,20 @@ Maintains dynamic catalogue of all ML analysis tools and validates capability co
 """
 
 from typing import Dict, Any, List, Optional
-from tools.base_tool import BaseMLTool
-from tools.cohort_tool import CohortTool
-from tools.trend_tool import TrendTool
-from tools.anomaly_tool import AnomalyTool
-from tools.risk_tool import RiskTool
-from tools.pattern_tool import PatternTool
+try:
+    from tools.base_tool import BaseMLTool
+    from tools.cohort_tool import CohortTool
+    from tools.trend_tool import TrendTool
+    from tools.anomaly_tool import AnomalyTool
+    from tools.risk_tool import RiskTool
+    from tools.pattern_tool import PatternTool
+except (ImportError, ModuleNotFoundError):
+    from app.tools.base_tool import BaseMLTool
+    from app.tools.cohort_tool import CohortTool
+    from app.tools.trend_tool import TrendTool
+    from app.tools.anomaly_tool import AnomalyTool
+    from app.tools.risk_tool import RiskTool
+    from app.tools.pattern_tool import PatternTool
 
 
 class ToolRegistry:
