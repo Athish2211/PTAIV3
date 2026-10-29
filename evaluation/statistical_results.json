@@ -1,0 +1,125 @@
+{
+  "validation_metadata": {
+    "evaluation_set": "Strictly Held-Out Benchmark Suite",
+    "total_scenarios_n": 30,
+    "alpha_threshold": 0.05,
+    "confidence_level": 0.95
+  },
+  "task_success_confidence_intervals": {
+    "ptai_v3": {
+      "successes": 16,
+      "total": 30,
+      "proportion": 0.5333,
+      "percentage": 53.33,
+      "ci_lower_pct": 36.14,
+      "ci_upper_pct": 69.77,
+      "margin_of_error_pct": 16.81
+    },
+    "baseline_1_single_agent": {
+      "successes": 9,
+      "total": 30,
+      "proportion": 0.3,
+      "percentage": 30.0,
+      "ci_lower_pct": 16.66,
+      "ci_upper_pct": 47.88,
+      "margin_of_error_pct": 15.61
+    },
+    "baseline_2_heuristic": {
+      "successes": 4,
+      "total": 30,
+      "proportion": 0.1333,
+      "percentage": 13.33,
+      "ci_lower_pct": 5.31,
+      "ci_upper_pct": 29.68,
+      "margin_of_error_pct": 12.19
+    }
+  },
+  "paired_hypothesis_tests": {
+    "ptai_vs_single_agent": {
+      "comparison": "PTAI_v3 vs SingleAgent_Baseline",
+      "sample_size": 30,
+      "contingency_table": {
+        "both_passed": 5,
+        "PTAI_v3_pass_SingleAgent_Baseline_fail": 11,
+        "PTAI_v3_fail_SingleAgent_Baseline_pass": 4,
+        "both_failed": 10
+      },
+      "discordant_pairs": 15,
+      "mcnemar_chi2_corrected": 2.4,
+      "chi2_p_value": 0.121335,
+      "exact_binomial_p_value": 0.118469,
+      "statistically_significant": false,
+      "effect_size": {
+        "cohens_g": 0.2333,
+        "cohens_g_interpretation": "Medium (g >= 0.15)",
+        "odds_ratio": 2.75
+      }
+    },
+    "ptai_vs_heuristic": {
+      "comparison": "PTAI_v3 vs Heuristic_Baseline",
+      "sample_size": 30,
+      "contingency_table": {
+        "both_passed": 4,
+        "PTAI_v3_pass_Heuristic_Baseline_fail": 12,
+        "PTAI_v3_fail_Heuristic_Baseline_pass": 0,
+        "both_failed": 14
+      },
+      "discordant_pairs": 12,
+      "mcnemar_chi2_corrected": 10.0833,
+      "chi2_p_value": 0.001496,
+      "exact_binomial_p_value": 0.000488,
+      "statistically_significant": true,
+      "effect_size": {
+        "cohens_g": 0.5,
+        "cohens_g_interpretation": "Large (g >= 0.25)",
+        "odds_ratio": 25.0
+      }
+    }
+  },
+  "latency_statistical_comparisons": {
+    "ptai_vs_single_agent": {
+      "comparison": "PTAI_v3 vs SingleAgent_Baseline (Latency in ms)",
+      "sample_size": 30,
+      "PTAI_v3_median_ms": 23912.0,
+      "PTAI_v3_mean_ms": 22157.0,
+      "SingleAgent_Baseline_median_ms": 10955.0,
+      "SingleAgent_Baseline_mean_ms": 9582.9,
+      "mean_difference_ms": 12574.1,
+      "median_difference_ms": 14613.0,
+      "paired_t_statistic": 6.5566,
+      "paired_t_p_value": 0.0,
+      "wilcoxon_signed_rank_p_value": 0.0,
+      "cohens_d": 1.197,
+      "significant": true
+    },
+    "ptai_vs_heuristic": {
+      "comparison": "PTAI_v3 vs Heuristic_Baseline (Latency in ms)",
+      "sample_size": 30,
+      "PTAI_v3_median_ms": 23912.0,
+      "PTAI_v3_mean_ms": 22157.0,
+      "Heuristic_Baseline_median_ms": 0.0,
+      "Heuristic_Baseline_mean_ms": 0.0,
+      "mean_difference_ms": 22157.0,
+      "median_difference_ms": 23912.0,
+      "paired_t_statistic": 9.6682,
+      "paired_t_p_value": 0.0,
+      "wilcoxon_signed_rank_p_value": 1.2e-05,
+      "cohens_d": 1.765,
+      "significant": true
+    }
+  },
+  "safety_guardrail_subgroup_analysis": {
+    "adversarial_prompt_injection_defense": {
+      "sample_size_n": 5,
+      "ptai_v3_blocked_pct": 100.0,
+      "baseline_1_single_agent_blocked_pct": 0.0,
+      "baseline_2_heuristic_blocked_pct": 0.0
+    },
+    "clinical_contraindication_alerting": {
+      "sample_size_n": 5,
+      "ptai_v3_passed_pct": 0.0,
+      "baseline_1_single_agent_passed_pct": 0.0,
+      "baseline_2_heuristic_passed_pct": 0.0
+    }
+  }
+}
