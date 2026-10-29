@@ -9,6 +9,7 @@ Executes dynamic model competition against baseline methods on held-out tabular 
 import sys
 import os
 import time
+import json
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, Tuple
