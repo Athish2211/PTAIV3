@@ -9,8 +9,9 @@ import {
 import { useRole, PatientRecord } from '@/context/RoleContext'
 
 export default function PatientsDirectoryPage() {
-  const { role, handoffToPrescription, patients, addPatient } = useRole()
+  const { role, handoffToPrescription, patients, addPatient, currentUser, allDoctors, switchUser } = useRole()
   const [search, setSearch] = useState('')
+  const [selectedDoctorFilter, setSelectedDoctorFilter] = useState<string>('all')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   // New Patient Form State
@@ -25,6 +26,10 @@ export default function PatientsDirectoryPage() {
   })
 
   const filtered = patients.filter((p) => {
+    if (role === 'admin' && selectedDoctorFilter !== 'all') {
+      if ((p.doctor_id || 'doc-demo') !== selectedDoctorFilter) return false
+    }
+
     if (role === 'doctor') {
       return (
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -54,6 +59,8 @@ export default function PatientsDirectoryPage() {
 
     const newRecord: PatientRecord = {
       id: `p-${Date.now()}`,
+      doctor_id: currentUser?.id || 'doc-demo',
+      doctor_name: currentUser?.name || 'Dr. Dinesh Kumar',
       name: formData.name.trim(),
       deidentified_id: `PT-ANON-${randomCode}`,
       mrn: `MRN-2026-${randomCode}`,
