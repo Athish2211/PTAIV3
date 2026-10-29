@@ -60,7 +60,7 @@ class RAGRetriever:
                 embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
                 stmt = text("""
                     SELECT c.content, c.chunk_index, d.original_filename, 
-                           (c.embedding <=> :embedding::vector) as distance
+                           (c.embedding <=> CAST(:embedding AS vector)) as distance
                     FROM document_chunks c
                     JOIN documents d ON c.document_id = d.id
                     WHERE d.patient_id = :patient_id
@@ -76,15 +76,18 @@ class RAGRetriever:
                 
                 rows = result.fetchall()
                 for row in rows:
-                    context.append({
-                        "content": row.content,
-                        "source": row.original_filename,
-                        "relevance_score": round(max(0.0, 1.0 - float(row.distance)), 3)
-                    })
+                    if row.content:
+                        dist = float(row.distance) if row.distance is not None else 1.0
+                        context.append({
+                            "content": row.content,
+                            "source": row.original_filename,
+                            "relevance_score": round(max(0.0, 1.0 - dist), 3) if not (dist != dist) else 0.85
+                        })
         except Exception as e:
             logger.warning(f"Vector search failed (falling back to relational records): {e}")
+            await self.db.rollback()
 
-        # 2. Query longitudinal relational prescriptions if vector didn't return enough
+        # 2. Query longitudinal relational prescriptions
         try:
             rx_stmt = text("""
                 SELECT p.rx_number, p.prescription_date, p.diagnosis_context, p.status,
@@ -100,7 +103,6 @@ class RAGRetriever:
             rx_rows = rx_res.fetchall()
             for r in rx_rows:
                 source_name = f"Prescription Record ({r.rx_number})"
-                # Avoid duplicate if vector search already included it
                 if not any(source_name in c["source"] for c in context):
                     context.append({
                         "content": f"Prescription {r.rx_number} on {r.prescription_date} for {r.diagnosis_context}. Prescribed: {r.medications}. Status: {r.status}.",
@@ -110,6 +112,7 @@ class RAGRetriever:
                     })
         except Exception as e:
             logger.warning(f"Prescriptions query failed: {e}")
+            await self.db.rollback()
 
         # 3. Query clinical encounter notes
         try:
@@ -135,5 +138,6 @@ class RAGRetriever:
                     })
         except Exception as e:
             logger.warning(f"Encounters query failed: {e}")
+            await self.db.rollback()
 
         return context
