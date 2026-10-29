@@ -60,18 +60,19 @@ Output ONLY a JSON object with this exact structure (no markdown tags):
             "requires_patient_context": is_patient_query
         }
 
-        try:
-            response_text = await llm_client.generate(
-                prompt=query,
-                system=self.INTENT_PROMPT,
-                json_format=True,
-                timeout=15.0
-            )
-            parsed_routing = json.loads(response_text)
-            if isinstance(parsed_routing, dict) and "required_agents" in parsed_routing:
-                routing_info = parsed_routing
-        except Exception:
-            pass  # Use deterministic routing fallback above
+        if not is_patient_query:
+            try:
+                response_text = await llm_client.generate(
+                    prompt=query,
+                    system=self.INTENT_PROMPT,
+                    json_format=True,
+                    timeout=8.0
+                )
+                parsed_routing = json.loads(response_text)
+                if isinstance(parsed_routing, dict) and "required_agents" in parsed_routing:
+                    routing_info = parsed_routing
+            except Exception:
+                pass
 
         agents_used = routing_info.get("required_agents", [])
         if is_patient_query and "patient_memory" not in agents_used:
