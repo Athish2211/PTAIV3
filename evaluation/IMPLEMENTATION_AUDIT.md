@@ -120,3 +120,4 @@ To satisfy all requirements of the rubric criterion **Results, Validation & Comp
    - 6 standalone charts saved to `evaluation/figures/`.
 5. **Produce the Comprehensive Markdown & PDF Report**:
    - Complete 17-section report matching all rubric requirements.
+

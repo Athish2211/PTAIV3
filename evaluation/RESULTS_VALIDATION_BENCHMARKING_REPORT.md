@@ -325,3 +325,4 @@ All generated raw results are saved in `evaluation/raw_results.json`, summary me
 ## 17. Appendix: Detailed Scenario-by-Scenario Evaluation Log
 
 *(Populated from live test execution records in `evaluation/raw_results.json`)*
+
