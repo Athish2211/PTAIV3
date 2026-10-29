@@ -234,14 +234,6 @@ I have loaded the longitudinal records for **${p.name} (${p.mrn})**. You can ask
       diagnosis: selectedPatient.diagnosis || selectedPatient.chronic_conditions?.[0] || 'General Outpatient',
       notes: `Carried forward from Clinical RAG Agent search. Active medications: ${fullPatientDossier?.active_medications?.join(', ') || 'None'}.`,
     })
-    router.push('/prescriptions/new')
-  }
-      gender: selectedPatient.gender,
-      allergies: selectedPatient.allergies,
-      diagnosis: selectedPatient.chronic_conditions?.[0] || 'Type 2 Diabetes & Hypertension',
-      notes: `Carried forward from Clinical RAG Agent search. Active medications: ${selectedPatient.active_medications?.join(', ') || 'None'}.`,
-    })
-    router.push('/prescriptions/new')
   }
 
   if (patients.length === 0 || !selectedPatient) {
