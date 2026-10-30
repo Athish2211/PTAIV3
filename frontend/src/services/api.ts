@@ -105,16 +105,16 @@ export const authApi = {
 
 export const patientsApi = {
   list: (params?: { search?: string; page?: number; limit?: number }) =>
-    api.get('/patients', { params }),
-  get: (id: string) => api.get(`/patients/${id}`),
+    api.get('/patients', { params, skipAuthRedirect: true } as any),
+  get: (id: string) => api.get(`/patients/${id}`, { skipAuthRedirect: true } as any),
   create: (data: any) => api.post('/patients', data),
   update: (id: string, data: any) => api.put(`/patients/${id}`, data),
   delete: (id: string) => api.delete(`/patients/${id}`),
-  getTimeline: (id: string) => api.get(`/patients/${id}/timeline`),
-  getPrescriptions: (id: string) => api.get(`/patients/${id}/prescriptions`),
-  getDocuments: (id: string) => api.get(`/patients/${id}/documents`),
-  getVisits: (id: string) => api.get(`/patients/${id}/encounters`),
-  getFollowUps: (id: string) => api.get(`/patients/${id}/follow-ups`),
+  getTimeline: (id: string) => api.get(`/patients/${id}/timeline`, { skipAuthRedirect: true } as any),
+  getPrescriptions: (id: string) => api.get(`/patients/${id}/prescriptions`, { skipAuthRedirect: true } as any),
+  getDocuments: (id: string) => api.get(`/patients/${id}/documents`, { skipAuthRedirect: true } as any),
+  getVisits: (id: string) => api.get(`/patients/${id}/encounters`, { skipAuthRedirect: true } as any),
+  getFollowUps: (id: string) => api.get(`/patients/${id}/follow-ups`, { skipAuthRedirect: true } as any),
 }
 
 // ── Prescription Uploads (NEW FEATURE) ───────────────────────────

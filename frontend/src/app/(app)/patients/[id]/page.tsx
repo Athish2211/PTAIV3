@@ -30,20 +30,12 @@ export default function PatientDetailPage() {
   const [docError, setDocError] = useState('')
 
   useEffect(() => {
-    const fetchPatient = async () => {
-      try {
-        const res = await patientsApi.get(patientId)
-        if (res.data) {
-          setPatient(res.data)
-          setLoading(false)
-          return
-        }
-      } catch (err) {
-        // Fallback to local clinical patient context
-      }
+    let isMounted = true
 
+    const fetchPatient = async () => {
+      // 1. Try local clinical context first (instant load)
       const local = getPatient(patientId)
-      if (local) {
+      if (local && isMounted) {
         setPatient({
           first_name: local.name.split(' ')[0] || local.name,
           last_name: local.name.split(' ').slice(1).join(' ') || '',
@@ -61,11 +53,44 @@ export default function PatientDetailPage() {
           last_visit: local.last_visit,
           notes: local.notes,
         })
+        setLoading(false)
       }
-      setLoading(false)
+
+      // 2. Fetch latest live backend DB records in background if available
+      try {
+        const res = await patientsApi.get(patientId)
+        if (res.data && isMounted) {
+          setPatient((prev: any) => ({
+            ...prev,
+            ...res.data,
+            first_name: res.data.first_name || prev?.first_name,
+            last_name: res.data.last_name || prev?.last_name,
+            name: `${res.data.first_name || ''} ${res.data.last_name || ''}`.trim() || prev?.name,
+            mrn: res.data.mrn || prev?.mrn,
+            age: res.data.date_of_birth ? Math.floor((Date.now() - new Date(res.data.date_of_birth).getTime()) / (365.25 * 24 * 3600 * 1000)) : (res.data.age || prev?.age),
+            gender: res.data.gender || prev?.gender,
+            blood_group: res.data.blood_group || prev?.blood_group,
+            phone: res.data.phone || prev?.phone,
+            allergies: res.data.allergies && res.data.allergies.length > 0 ? res.data.allergies : prev?.allergies,
+            chronic_conditions: res.data.chronic_conditions && res.data.chronic_conditions.length > 0 ? res.data.chronic_conditions : prev?.chronic_conditions,
+            active_medications: res.data.active_medications && res.data.active_medications.length > 0 ? res.data.active_medications : prev?.active_medications,
+            risk_level: res.data.risk_level || prev?.risk_level,
+            last_visit: res.data.last_visit || prev?.last_visit,
+            notes: res.data.notes || prev?.notes,
+          }))
+          setLoading(false)
+        }
+      } catch (err) {
+        // Backend not authenticated or not found - gracefully continue with local data
+      } finally {
+        if (isMounted) setLoading(false)
+      }
     }
 
     fetchPatient()
+    return () => {
+      isMounted = false
+    }
   }, [patientId, getPatient])
 
   const handleStructureNotes = async () => {
