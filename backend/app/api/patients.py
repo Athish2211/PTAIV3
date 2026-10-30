@@ -24,6 +24,12 @@ class PatientCreate(BaseModel):
 class PatientResponse(PatientCreate):
     id: uuid.UUID
     organization_id: uuid.UUID
+    allergies: Optional[List[str]] = []
+    chronic_conditions: Optional[List[str]] = []
+    active_medications: Optional[List[str]] = []
+    risk_level: Optional[str] = "Low"
+    notes: Optional[str] = None
+    last_visit: Optional[str] = None
 
     class Config:
         from_attributes = True
