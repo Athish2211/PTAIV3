@@ -306,23 +306,23 @@ export default function PatientDetailPage() {
                 {(() => {
                   const events = [
                     ...prescriptions
-                      .filter((rx) => rx.patient_id === patient.id || rx.mrn === patient.mrn)
+                      .filter((rx) => (patient?.id && rx.patient_id === patient.id) || (patient?.mrn && rx.mrn === patient.mrn) || (patient?.name && rx.patient_name === patient.name))
                       .map((rx) => ({ type: 'prescription', date: rx.date, data: rx })),
-                    { type: 'evaluation', date: patient.last_visit || '2026-06-10', data: null }
+                    { type: 'evaluation', date: patient?.last_visit || '2026-06-10', data: null }
                   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                   return events.map((ev, idx) => {
                     if (ev.type === 'prescription' && ev.data) {
                       const rx = ev.data;
                       return (
-                        <div key={`rx-${rx.id}`} className="relative space-y-1">
+                        <div key={`rx-${rx.id || idx}`} className="relative space-y-1">
                           <div className={`absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-[var(--bg-base)] ${idx === 0 ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
                           <div className="flex items-center justify-between text-xs">
                             <span className="font-bold text-white">Prescription Issued: {rx.diagnosis}</span>
                             <span className="text-[var(--text-muted)] font-mono">{rx.date}</span>
                           </div>
                           <p className="text-xs text-[var(--text-secondary)]">
-                            {rx.medications.length} medication(s) prescribed. {rx.risk_status === 'anomaly_flagged' ? 'Flagged for anomaly review by AI.' : 'AI Safety Guardrail Passed.'}
+                            {(rx.medications || []).length} medication(s) prescribed. {rx.risk_status === 'anomaly_flagged' ? 'Flagged for anomaly review by AI.' : 'AI Safety Guardrail Passed.'}
                           </p>
                         </div>
                       );
