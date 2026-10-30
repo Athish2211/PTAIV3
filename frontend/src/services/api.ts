@@ -35,6 +35,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // If request explicitly opted out of auth redirect, reject cleanly without wiping session
+    if ((error.config as any)?.skipAuthRedirect) {
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 401) {
       // Try to refresh token
       try {
@@ -50,8 +55,15 @@ api.interceptors.response.use(
           return api(error.config)
         }
       } catch {
-        // Refresh failed — redirect to login
+        // Refresh failed
       }
+
+      // If user has an active workstation clinical profile, do not kick them out
+      const activeUser = typeof window !== 'undefined' ? localStorage.getItem('ptai_active_user_v2') : null
+      if (activeUser) {
+        return Promise.reject(error)
+      }
+
       localStorage.removeItem('ptai_access_token')
       localStorage.removeItem('ptai_refresh_token')
       if (typeof window !== 'undefined') {
