@@ -2,7 +2,7 @@
 import uuid
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_, String, cast
 from app.models.patient import Patient
 
 
@@ -11,14 +11,42 @@ class PatientRepository:
         self.db = db
 
     async def get_by_id_and_org(self, patient_id: str, organization_id: str, doctor_id: Optional[str] = None) -> Optional[Patient]:
-        """IDOR-safe: always verify organization_id."""
+        """IDOR-safe: resolves UUID, MRN (MRN-2026-XXXX), or frontend ID (p-XXXX)."""
         conditions = [
-            Patient.id == uuid.UUID(patient_id),
             Patient.organization_id == uuid.UUID(organization_id),
             Patient.is_active == True,
         ]
+
+        parsed_uuid = None
+        try:
+            parsed_uuid = uuid.UUID(str(patient_id).strip())
+        except (ValueError, TypeError, AttributeError):
+            pass
+
+        if parsed_uuid:
+            conditions.append(Patient.id == parsed_uuid)
+        else:
+            mrn_raw = str(patient_id).strip()
+            mrn_clean = f"MRN-2026-{mrn_raw.replace('p-', '')}" if mrn_raw.startswith("p-") else mrn_raw
+            conditions.append(
+                or_(
+                    Patient.mrn.ilike(mrn_clean),
+                    Patient.mrn.ilike(mrn_raw),
+                    cast(Patient.id, String) == mrn_raw
+                )
+            )
+
         if doctor_id:
-            conditions.append(Patient.primary_doctor_id == uuid.UUID(doctor_id))
+            try:
+                doc_uuid = uuid.UUID(doctor_id)
+                conditions.append(
+                    or_(
+                        Patient.primary_doctor_id == doc_uuid,
+                        Patient.primary_doctor_id.is_(None)
+                    )
+                )
+            except (ValueError, TypeError):
+                pass
 
         result = await self.db.execute(select(Patient).where(*conditions))
         return result.scalar_one_or_none()
@@ -29,7 +57,16 @@ class PatientRepository:
             Patient.is_active == True
         ]
         if doctor_id:
-            conditions.append(Patient.primary_doctor_id == uuid.UUID(doctor_id))
+            try:
+                doc_uuid = uuid.UUID(doctor_id)
+                conditions.append(
+                    or_(
+                        Patient.primary_doctor_id == doc_uuid,
+                        Patient.primary_doctor_id.is_(None)
+                    )
+                )
+            except (ValueError, TypeError):
+                pass
 
         result = await self.db.execute(
             select(Patient)
